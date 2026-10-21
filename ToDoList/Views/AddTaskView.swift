@@ -14,7 +14,7 @@ public struct AddTaskView: View {
     @State private var hasReminder: Bool = false
     @State private var reminderDate: Date = Date()
     @State private var recurrence: RecurrenceRule = .none
-    @State private var categoryId: String = "personal"
+    @State private var categoryId: String = "russian"
     @State private var subtasks: [SubTask] = []
     @State private var newSubtaskTitle: String = ""
 
@@ -40,8 +40,8 @@ public struct AddTaskView: View {
                         .font(.system(size: 15))
                 }
 
-                Section(header: Text("Категория")) {
-                    Picker("Категория", selection: $categoryId) {
+                Section(header: Text("Предмет")) {
+                    Picker("Предмет", selection: $categoryId) {
                         ForEach(taskManager.categories.filter { $0.id != "all" }) { cat in
                             HStack {
                                 Image(systemName: cat.icon)

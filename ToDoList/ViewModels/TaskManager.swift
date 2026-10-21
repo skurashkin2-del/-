@@ -92,7 +92,7 @@ public class TaskManager: ObservableObject {
         hasReminder: Bool = false,
         reminderDate: Date? = nil,
         recurrence: RecurrenceRule = .none,
-        categoryId: String = "personal",
+        categoryId: String = "russian",
         subtasks: [SubTask] = []
     ) {
         let newTask = TaskItem(
@@ -332,7 +332,14 @@ public class TaskManager: ObservableObject {
     private func loadTasks() {
         if let savedData = UserDefaults.standard.data(forKey: storageKey),
            let decoded = try? JSONDecoder().decode([TaskItem].self, from: savedData) {
-            self.tasks = decoded
+            let validIds = Set(categories.map { $0.id })
+            self.tasks = decoded.map { task in
+                var t = task
+                if !validIds.contains(t.categoryId) {
+                    t.categoryId = "russian"
+                }
+                return t
+            }
         }
     }
 
@@ -342,35 +349,53 @@ public class TaskManager: ObservableObject {
 
         tasks = [
             TaskItem(
-                title: "Добро пожаловать в To-Do!",
-                notes: "Нажмите на кружок слева, чтобы отметить задачу как выполненную.",
-                dueDate: today,
-                isCompleted: false,
-                priority: .medium,
-                recurrence: .none,
-                categoryId: "personal",
-                subtasks: [
-                    SubTask(title: "Попробовать добавить подзадачу", isCompleted: true),
-                    SubTask(title: "Посмотреть статистику в шапке", isCompleted: false)
-                ]
-            ),
-            TaskItem(
-                title: "Спланировать неделю",
-                notes: "Переключайте дни недели в верхней панели, чтобы планировать дела.",
+                title: "Повторить орфоэпический словник и паронимы",
+                notes: "Пройтись по ударениям из кодификатора ЕГЭ.",
                 dueDate: today,
                 isCompleted: false,
                 priority: .high,
-                recurrence: .weekly,
-                categoryId: "work"
+                recurrence: .none,
+                categoryId: "russian",
+                subtasks: [
+                    SubTask(title: "Задание 4 (Ударения)", isCompleted: true),
+                    SubTask(title: "Задание 5 (Паронимы)", isCompleted: false)
+                ]
             ),
             TaskItem(
-                title: "Утренняя зарядка",
-                notes: "Разминка и стакан воды.",
+                title: "Решить вариант по базовой математике",
+                notes: "Потренировать вычисления с дробями и геометрию.",
+                dueDate: today,
+                isCompleted: false,
+                priority: .medium,
+                recurrence: .weekly,
+                categoryId: "math"
+            ),
+            TaskItem(
+                title: "Прочитать критическую статью к произведению",
+                notes: "Выписать ключевые цитаты и аргументы для сочинения.",
                 dueDate: tomorrow,
                 isCompleted: false,
-                priority: .low,
-                recurrence: .daily,
-                categoryId: "health"
+                priority: .medium,
+                recurrence: .none,
+                categoryId: "literature"
+            ),
+            TaskItem(
+                title: "Повторить блок «Человек и общество»",
+                notes: "Составить развёрнутый план и выписать определения.",
+                dueDate: tomorrow,
+                isCompleted: false,
+                priority: .medium,
+                recurrence: .weekly,
+                categoryId: "social"
+            ),
+            TaskItem(
+                title: "Подготовить план репортажа / эссе",
+                notes: "Выбрать актуальную тему, тезисы и структуру материала.",
+                dueDate: today,
+                isCompleted: false,
+                priority: .high,
+                recurrence: .none,
+                categoryId: "journalism"
             )
         ]
     }

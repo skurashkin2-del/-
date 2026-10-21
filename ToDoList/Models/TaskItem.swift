@@ -86,12 +86,12 @@ public struct TaskCategory: Identifiable, Codable, Equatable, Hashable {
     }
 
     public static let defaults: [TaskCategory] = [
-        TaskCategory(id: "all", name: "Все", icon: "tray.fill", colorHex: "#3B82F6"),
-        TaskCategory(id: "personal", name: "Личное", icon: "person.fill", colorHex: "#0EA5E9"),
-        TaskCategory(id: "work", name: "Работа", icon: "briefcase.fill", colorHex: "#8B5CF6"),
-        TaskCategory(id: "shopping", name: "Покупки", icon: "cart.fill", colorHex: "#10B981"),
-        TaskCategory(id: "health", name: "Здоровье", icon: "heart.fill", colorHex: "#EF4444"),
-        TaskCategory(id: "study", name: "Учёба", icon: "book.fill", colorHex: "#F59E0B")
+        TaskCategory(id: "all", name: "Все", icon: "tray.fill", colorHex: "#6366F1"),
+        TaskCategory(id: "russian", name: "Русский язык", icon: "textformat", colorHex: "#EF4444"),
+        TaskCategory(id: "math", name: "Базовая математика", icon: "function", colorHex: "#3B82F6"),
+        TaskCategory(id: "literature", name: "Литература", icon: "books.vertical.fill", colorHex: "#8B5CF6"),
+        TaskCategory(id: "social", name: "Обществознание", icon: "building.columns.fill", colorHex: "#10B981"),
+        TaskCategory(id: "journalism", name: "Журналистика", icon: "newspaper.fill", colorHex: "#F59E0B")
     ]
 }
 
@@ -136,7 +136,7 @@ public struct TaskItem: Identifiable, Codable, Equatable {
         hasReminder: Bool = false,
         reminderDate: Date? = nil,
         recurrence: RecurrenceRule = .none,
-        categoryId: String = "personal",
+        categoryId: String = "russian",
         subtasks: [SubTask] = []
     ) {
         self.id = id
