@@ -11,6 +11,8 @@ public struct AddTaskView: View {
     @State private var notes: String = ""
     @State private var dueDate: Date = Date()
     @State private var priority: TaskPriority = .medium
+    @State private var hasReminder: Bool = false
+    @State private var reminderDate: Date = Date()
 
     public init(taskManager: TaskManager, initialDate: Date, editingTask: TaskItem? = nil) {
         self.taskManager = taskManager
@@ -37,6 +39,29 @@ public struct AddTaskView: View {
                 Section(header: Text("Дата и время")) {
                     DatePicker("Срок", selection: $dueDate, displayedComponents: [.date, .hourAndMinute])
                         .datePickerStyle(.compact)
+                }
+
+                Section(header: Text("Напоминание")) {
+                    Toggle(isOn: $hasReminder) {
+                        HStack(spacing: 8) {
+                            Image(systemName: hasReminder ? "bell.fill" : "bell")
+                                .foregroundColor(hasReminder ? .orange : .secondary)
+                            Text("Уведомить о задаче")
+                        }
+                    }
+                    .onChange(of: hasReminder) { enabled in
+                        if enabled {
+                            NotificationManager.shared.requestAuthorization()
+                            if reminderDate < Date() {
+                                reminderDate = dueDate
+                            }
+                        }
+                    }
+
+                    if hasReminder {
+                        DatePicker("Время напоминания", selection: $reminderDate, displayedComponents: [.date, .hourAndMinute])
+                            .datePickerStyle(.compact)
+                    }
                 }
 
                 Section(header: Text("Приоритет")) {
@@ -77,16 +102,19 @@ public struct AddTaskView: View {
                     notes = task.notes
                     dueDate = task.dueDate
                     priority = task.priority
+                    hasReminder = task.hasReminder
+                    reminderDate = task.reminderDate ?? task.dueDate
                 } else {
-                    // Set dueDate keeping current hour/minute but setting day to initialDate
                     let calendar = Calendar.current
                     let now = Date()
                     let hour = calendar.component(.hour, from: now)
                     let minute = calendar.component(.minute, from: now)
                     if let combined = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: initialDate) {
                         dueDate = combined
+                        reminderDate = combined
                     } else {
                         dueDate = initialDate
+                        reminderDate = initialDate
                     }
                 }
             }
@@ -102,13 +130,17 @@ public struct AddTaskView: View {
             task.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
             task.dueDate = dueDate
             task.priority = priority
+            task.hasReminder = hasReminder
+            task.reminderDate = hasReminder ? reminderDate : nil
             taskManager.updateTask(task)
         } else {
             taskManager.addTask(
                 title: trimmedTitle,
                 notes: notes,
                 dueDate: dueDate,
-                priority: priority
+                priority: priority,
+                hasReminder: hasReminder,
+                reminderDate: hasReminder ? reminderDate : nil
             )
         }
         presentationMode.wrappedValue.dismiss()

@@ -7,31 +7,69 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		445855AC166143B50DA9BE26 /* ToDoListApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92773BCCC45282EFAB6E0F37 /* ToDoListApp.swift */; };
-		73EF4E1C12CE4FBBB73BB519 /* TaskItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989731F8280F55249CB869C3 /* TaskItem.swift */; };
-		2E98912A360DEB5B1FA3C15D /* TaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13532966E6E81A95C07CF0F /* TaskManager.swift */; };
-		9C0902A9F4BFD035FFA94B86 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29815555C9B953B70E53E853 /* ContentView.swift */; };
-		B3ABE278E3B900D47A63D662 /* WeekCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A045FC6AEDB155DCD3E0E11B /* WeekCalendarView.swift */; };
-		EF87909AAC50ABF715DBEABF /* TaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E128D0A82ADEC0CB4B5F75D5 /* TaskRowView.swift */; };
-		CC8435E437C8060FB7F7188A /* AddTaskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5DA2A9D621E0C27BD5922A /* AddTaskView.swift */; };
-		E1BEB1DB6DC969F2E86C98D2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6DD16DA81E5D4F5F58216251 /* Assets.xcassets */; };
+		DC4A93E647663783BF25A11F /* ToDoListApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22CA2F73F8D1CACD538DA99A /* ToDoListApp.swift */; };
+		88008DCE75897ECE98E67870 /* TaskItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48011FDDC81321A56D155F53 /* TaskItem.swift */; };
+		C4056C919B3A4711C7E5C7A7 /* TaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E00A2597F962835259C2C58 /* TaskManager.swift */; };
+		D484878E648FC4C0C64BC42A /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575771B773667BD17E829D0A /* NotificationManager.swift */; };
+		BC9103A8ED9D42F6A2242F31 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE9B9DEE36FA251D2F1DEB06 /* ContentView.swift */; };
+		EB816336A8DFF63798341685 /* WeekCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD27E57B318380E63E3B0A3 /* WeekCalendarView.swift */; };
+		543B49D4CD5AF90BA893AA69 /* TaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76A4A62F81B9F293BC19BE2E /* TaskRowView.swift */; };
+		0C4A7A29039E7EE0F773DF7C /* AddTaskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CCFD063EE2AEE356D6BF50A /* AddTaskView.swift */; };
+		2EA25826B7191AC04A0C8A9F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 51E71D20947AEDCC270BC4AA /* Assets.xcassets */; };
+		59447D09FBEF5A0B5350A667 /* ToDoListWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FF229A6863C3ABDB8FD7BD /* ToDoListWidget.swift */; };
+		355374C8FA5E28D5FB058966 /* ToDoListWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 65D903D460DFF369E2A82A95 /* ToDoListWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		EAC7B1D8DB66779087C587D3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1781F676DEDF5767F3243DB0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CCFF9288EFE114F90295A89D;
+			remoteInfo = ToDoListWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F2B44AA4F7C0E106A34089F3 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				355374C8FA5E28D5FB058966 /* ToDoListWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		2678F494CC29BA8E2F0C4643 /* ToDoList.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ToDoList.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		92773BCCC45282EFAB6E0F37 /* ToDoListApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToDoListApp.swift; sourceTree = "<group>"; };
-		989731F8280F55249CB869C3 /* TaskItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskItem.swift; sourceTree = "<group>"; };
-		C13532966E6E81A95C07CF0F /* TaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManager.swift; sourceTree = "<group>"; };
-		29815555C9B953B70E53E853 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		A045FC6AEDB155DCD3E0E11B /* WeekCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekCalendarView.swift; sourceTree = "<group>"; };
-		E128D0A82ADEC0CB4B5F75D5 /* TaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowView.swift; sourceTree = "<group>"; };
-		EA5DA2A9D621E0C27BD5922A /* AddTaskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTaskView.swift; sourceTree = "<group>"; };
-		60D2DC34BB813784EE43AA4B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		6DD16DA81E5D4F5F58216251 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CFD45D47CEBC1FA7AE380071 /* ToDoList.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ToDoList.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		65D903D460DFF369E2A82A95 /* ToDoListWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ToDoListWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		22CA2F73F8D1CACD538DA99A /* ToDoListApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToDoListApp.swift; sourceTree = "<group>"; };
+		48011FDDC81321A56D155F53 /* TaskItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskItem.swift; sourceTree = "<group>"; };
+		0E00A2597F962835259C2C58 /* TaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskManager.swift; sourceTree = "<group>"; };
+		575771B773667BD17E829D0A /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		DE9B9DEE36FA251D2F1DEB06 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		CCD27E57B318380E63E3B0A3 /* WeekCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekCalendarView.swift; sourceTree = "<group>"; };
+		76A4A62F81B9F293BC19BE2E /* TaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowView.swift; sourceTree = "<group>"; };
+		2CCFD063EE2AEE356D6BF50A /* AddTaskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTaskView.swift; sourceTree = "<group>"; };
+		B887469BF8E739D4840ED0AE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		51E71D20947AEDCC270BC4AA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		19FF229A6863C3ABDB8FD7BD /* ToDoListWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToDoListWidget.swift; sourceTree = "<group>"; };
+		71A3D2FB628FB3829A897A1A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		A9E872B0C4F3AB11D258C39F /* Frameworks */ = {
+		C9CA6152344BFED51168D765 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DF78FBA19F7BE82BD63365D3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -45,6 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				B9DFBF21A03EBBF2228B9C6F /* ToDoList */,
+				D1E034B8DB47876DC6E7FED3 /* ToDoListWidget */,
 				B88D7E26791946AEFDCC8BB7 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -52,7 +91,8 @@
 		B88D7E26791946AEFDCC8BB7 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				2678F494CC29BA8E2F0C4643 /* ToDoList.app */,
+				CFD45D47CEBC1FA7AE380071 /* ToDoList.app */,
+				65D903D460DFF369E2A82A95 /* ToDoListWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -60,12 +100,13 @@
 		B9DFBF21A03EBBF2228B9C6F /* ToDoList */ = {
 			isa = PBXGroup;
 			children = (
-				92773BCCC45282EFAB6E0F37 /* ToDoListApp.swift */,
+				22CA2F73F8D1CACD538DA99A /* ToDoListApp.swift */,
 				A4C2A37E76047A91E5C0296C /* Models */,
+				803A864E0445A2F0C4BCA33B /* Services */,
 				88E68C707EC7772BE45CD9E7 /* ViewModels */,
 				C376D4D9BF34E56D9B2FBC3F /* Views */,
-				6DD16DA81E5D4F5F58216251 /* Assets.xcassets */,
-				60D2DC34BB813784EE43AA4B /* Info.plist */,
+				51E71D20947AEDCC270BC4AA /* Assets.xcassets */,
+				B887469BF8E739D4840ED0AE /* Info.plist */,
 			);
 			path = ToDoList;
 			sourceTree = "<group>";
@@ -73,15 +114,23 @@
 		A4C2A37E76047A91E5C0296C /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				989731F8280F55249CB869C3 /* TaskItem.swift */,
+				48011FDDC81321A56D155F53 /* TaskItem.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		803A864E0445A2F0C4BCA33B /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				575771B773667BD17E829D0A /* NotificationManager.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 		88E68C707EC7772BE45CD9E7 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
-				C13532966E6E81A95C07CF0F /* TaskManager.swift */,
+				0E00A2597F962835259C2C58 /* TaskManager.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -89,12 +138,21 @@
 		C376D4D9BF34E56D9B2FBC3F /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				29815555C9B953B70E53E853 /* ContentView.swift */,
-				A045FC6AEDB155DCD3E0E11B /* WeekCalendarView.swift */,
-				E128D0A82ADEC0CB4B5F75D5 /* TaskRowView.swift */,
-				EA5DA2A9D621E0C27BD5922A /* AddTaskView.swift */,
+				DE9B9DEE36FA251D2F1DEB06 /* ContentView.swift */,
+				CCD27E57B318380E63E3B0A3 /* WeekCalendarView.swift */,
+				76A4A62F81B9F293BC19BE2E /* TaskRowView.swift */,
+				2CCFD063EE2AEE356D6BF50A /* AddTaskView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		D1E034B8DB47876DC6E7FED3 /* ToDoListWidget */ = {
+			isa = PBXGroup;
+			children = (
+				19FF229A6863C3ABDB8FD7BD /* ToDoListWidget.swift */,
+				71A3D2FB628FB3829A897A1A /* Info.plist */,
+			);
+			path = ToDoListWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -102,20 +160,39 @@
 /* Begin PBXNativeTarget section */
 		0A1D1B958922F39EFB59FFBA /* ToDoList */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = ABCB5857317FC63440792851 /* Build configuration list for PBXNativeTarget "ToDoList" */;
+			buildConfigurationList = 2C4B788993A82B2CBCC8063A /* Build configuration list for PBXNativeTarget "ToDoList" */;
 			buildPhases = (
-				7EE609159AC086BAB15FF998 /* Sources */,
-				A9E872B0C4F3AB11D258C39F /* Frameworks */,
-				A2892AFC2D88060C0AA91373 /* Resources */,
+				8DAE9C34C85542F9903EEFA4 /* Sources */,
+				C9CA6152344BFED51168D765 /* Frameworks */,
+				214EAFDDECD4447341A419D4 /* Resources */,
+				F2B44AA4F7C0E106A34089F3 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3CA135995A75A5945B5AE641 /* PBXTargetDependency */,
+			);
+			name = ToDoList;
+			productName = ToDoList;
+			productReference = CFD45D47CEBC1FA7AE380071 /* ToDoList.app */;
+			productType = "com.apple.product-type.application";
+		};
+		CCFF9288EFE114F90295A89D /* ToDoListWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 249F3B2FC2C767E82B9C3632 /* Build configuration list for PBXNativeTarget "ToDoListWidget" */;
+			buildPhases = (
+				07FF3B867E024A1DB0E84A58 /* Sources */,
+				DF78FBA19F7BE82BD63365D3 /* Frameworks */,
+				CCD8ABDF5D6917A3F0F7F41A /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = ToDoList;
-			productName = ToDoList;
-			productReference = 2678F494CC29BA8E2F0C4643 /* ToDoList.app */;
-			productType = "com.apple.product-type.application";
+			name = ToDoListWidget;
+			productName = ToDoListWidget;
+			productReference = 65D903D460DFF369E2A82A95 /* ToDoListWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -128,6 +205,9 @@
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					0A1D1B958922F39EFB59FFBA = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					CCFF9288EFE114F90295A89D = {
 						CreatedOnToolsVersion = 15.0;
 					};
 				};
@@ -147,37 +227,62 @@
 			projectRoot = "";
 			targets = (
 				0A1D1B958922F39EFB59FFBA /* ToDoList */,
+				CCFF9288EFE114F90295A89D /* ToDoListWidget */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		A2892AFC2D88060C0AA91373 /* Resources */ = {
+		214EAFDDECD4447341A419D4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E1BEB1DB6DC969F2E86C98D2 /* Assets.xcassets in Resources */,
+				2EA25826B7191AC04A0C8A9F /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CCD8ABDF5D6917A3F0F7F41A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		7EE609159AC086BAB15FF998 /* Sources */ = {
+		8DAE9C34C85542F9903EEFA4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				445855AC166143B50DA9BE26 /* ToDoListApp.swift in Sources */,
-				73EF4E1C12CE4FBBB73BB519 /* TaskItem.swift in Sources */,
-				2E98912A360DEB5B1FA3C15D /* TaskManager.swift in Sources */,
-				9C0902A9F4BFD035FFA94B86 /* ContentView.swift in Sources */,
-				B3ABE278E3B900D47A63D662 /* WeekCalendarView.swift in Sources */,
-				EF87909AAC50ABF715DBEABF /* TaskRowView.swift in Sources */,
-				CC8435E437C8060FB7F7188A /* AddTaskView.swift in Sources */,
+				DC4A93E647663783BF25A11F /* ToDoListApp.swift in Sources */,
+				88008DCE75897ECE98E67870 /* TaskItem.swift in Sources */,
+				C4056C919B3A4711C7E5C7A7 /* TaskManager.swift in Sources */,
+				D484878E648FC4C0C64BC42A /* NotificationManager.swift in Sources */,
+				BC9103A8ED9D42F6A2242F31 /* ContentView.swift in Sources */,
+				EB816336A8DFF63798341685 /* WeekCalendarView.swift in Sources */,
+				543B49D4CD5AF90BA893AA69 /* TaskRowView.swift in Sources */,
+				0C4A7A29039E7EE0F773DF7C /* AddTaskView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		07FF3B867E024A1DB0E84A58 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				59447D09FBEF5A0B5350A667 /* ToDoListWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3CA135995A75A5945B5AE641 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CCFF9288EFE114F90295A89D /* ToDoListWidget */;
+			targetProxy = EAC7B1D8DB66779087C587D3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		5553174FA493EC616036F50F /* Debug */ = {
@@ -223,7 +328,7 @@
 			};
 			name = Release;
 		};
-		8A39CE81EAF796FD0E852384 /* Debug */ = {
+		15C7B59D4DD1A6EECFB95A87 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -248,7 +353,7 @@
 			};
 			name = Debug;
 		};
-		FEB493AA0F60A71593A15F70 /* Release */ = {
+		2C16196D1F19B83E4AC8D63B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -273,6 +378,52 @@
 			};
 			name = Release;
 		};
+		633FDA86EFBFD9135875FE01 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ToDoListWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Мой План";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.user.todolist.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AFAC40B5BEF6143DF564A188 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ToDoListWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Мой План";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.user.todolist.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -285,11 +436,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		ABCB5857317FC63440792851 /* Build configuration list for PBXNativeTarget "ToDoList" */ = {
+		2C4B788993A82B2CBCC8063A /* Build configuration list for PBXNativeTarget "ToDoList" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				8A39CE81EAF796FD0E852384 /* Debug */,
-				FEB493AA0F60A71593A15F70 /* Release */,
+				15C7B59D4DD1A6EECFB95A87 /* Debug */,
+				2C16196D1F19B83E4AC8D63B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		249F3B2FC2C767E82B9C3632 /* Build configuration list for PBXNativeTarget "ToDoListWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				633FDA86EFBFD9135875FE01 /* Debug */,
+				AFAC40B5BEF6143DF564A188 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -1,14 +1,18 @@
 import Foundation
 import Combine
+import WidgetKit
 
 public class TaskManager: ObservableObject {
     @Published public var tasks: [TaskItem] = [] {
         didSet {
             saveTasks()
+            syncToWidget()
         }
     }
 
     private let storageKey = "TodoList_UserTasks_Storage_v1"
+    private let widgetSuiteName = "group.com.user.todolist"
+    private let widgetStorageKey = "widget_today_tasks"
     private let calendar = Calendar.current
 
     public init() {
@@ -16,6 +20,8 @@ public class TaskManager: ObservableObject {
         if tasks.isEmpty {
             loadInitialSampleTasks()
         }
+        NotificationManager.shared.requestAuthorization()
+        syncToWidget()
     }
 
     // MARK: - Filter by Date
@@ -46,34 +52,87 @@ public class TaskManager: ObservableObject {
     }
 
     // MARK: - Mutations
-    public func addTask(title: String, notes: String, dueDate: Date, priority: TaskPriority) {
+    public func addTask(
+        title: String,
+        notes: String,
+        dueDate: Date,
+        priority: TaskPriority,
+        hasReminder: Bool = false,
+        reminderDate: Date? = nil
+    ) {
         let newTask = TaskItem(
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
             notes: notes.trimmingCharacters(in: .whitespacesAndNewlines),
             dueDate: dueDate,
-            priority: priority
+            priority: priority,
+            hasReminder: hasReminder,
+            reminderDate: reminderDate
         )
         tasks.append(newTask)
+        if newTask.hasReminder {
+            NotificationManager.shared.scheduleNotification(for: newTask)
+        }
     }
 
     public func toggleTaskCompletion(_ task: TaskItem) {
         if let index = tasks.firstIndex(where: { $0.id == task.id }) {
             tasks[index].isCompleted.toggle()
+            let updated = tasks[index]
+            if updated.isCompleted {
+                NotificationManager.shared.cancelNotification(for: updated)
+            } else if updated.hasReminder {
+                NotificationManager.shared.scheduleNotification(for: updated)
+            }
         }
     }
 
     public func deleteTask(_ task: TaskItem) {
+        NotificationManager.shared.cancelNotification(for: task)
         tasks.removeAll { $0.id == task.id }
     }
 
     public func deleteTask(withId id: UUID) {
+        NotificationManager.shared.cancelNotification(withId: id)
         tasks.removeAll { $0.id == id }
     }
 
     public func updateTask(_ updatedTask: TaskItem) {
         if let index = tasks.firstIndex(where: { $0.id == updatedTask.id }) {
             tasks[index] = updatedTask
+            if updatedTask.isCompleted {
+                NotificationManager.shared.cancelNotification(for: updatedTask)
+            } else if updatedTask.hasReminder {
+                NotificationManager.shared.scheduleNotification(for: updatedTask)
+            } else {
+                NotificationManager.shared.cancelNotification(for: updatedTask)
+            }
         }
+    }
+
+    // MARK: - Widget Synchronization
+    public func syncToWidget() {
+        let today = Date()
+        let todayTasks = tasks(for: today)
+        let widgetItems = todayTasks.map {
+            WidgetTaskItem(
+                id: $0.id.uuidString,
+                title: $0.title,
+                isCompleted: $0.isCompleted,
+                priority: $0.priority.rawValue
+            )
+        }
+
+        if let encoded = try? JSONEncoder().encode(widgetItems) {
+            // Write to shared App Group container
+            if let groupDefaults = UserDefaults(suiteName: widgetSuiteName) {
+                groupDefaults.set(encoded, forKey: widgetStorageKey)
+                groupDefaults.synchronize()
+            }
+            // Fallback to standard
+            UserDefaults.standard.set(encoded, forKey: widgetStorageKey)
+        }
+
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     // MARK: - Persistence

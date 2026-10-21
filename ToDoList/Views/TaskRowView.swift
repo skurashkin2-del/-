@@ -12,6 +12,14 @@ public struct TaskRowView: View {
         return formatter.string(from: task.dueDate)
     }
 
+    private var reminderTimeString: String? {
+        guard task.hasReminder, let reminderDate = task.reminderDate else { return nil }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ru_RU")
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: reminderDate)
+    }
+
     public var body: some View {
         HStack(alignment: .center, spacing: 14) {
             // Checkbox button
@@ -71,13 +79,25 @@ public struct TaskRowView: View {
                         .lineLimit(2)
                 }
 
-                HStack(spacing: 6) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 11))
-                    Text(timeString)
-                        .font(.system(size: 12))
+                HStack(spacing: 12) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 11))
+                        Text(timeString)
+                            .font(.system(size: 12))
+                    }
+                    .foregroundColor(.secondary.opacity(0.8))
+
+                    if let reminderStr = reminderTimeString {
+                        HStack(spacing: 4) {
+                            Image(systemName: "bell.fill")
+                                .font(.system(size: 10))
+                            Text(reminderStr)
+                                .font(.system(size: 12, weight: .medium))
+                        }
+                        .foregroundColor(.orange)
+                    }
                 }
-                .foregroundColor(.secondary.opacity(0.8))
                 .padding(.top, 2)
             }
             .contentShape(Rectangle())

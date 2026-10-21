@@ -39,6 +39,8 @@ public struct TaskItem: Identifiable, Codable, Equatable {
     public var isCompleted: Bool
     public var priority: TaskPriority
     public var createdAt: Date
+    public var hasReminder: Bool
+    public var reminderDate: Date?
 
     public init(
         id: UUID = UUID(),
@@ -47,7 +49,9 @@ public struct TaskItem: Identifiable, Codable, Equatable {
         dueDate: Date = Date(),
         isCompleted: Bool = false,
         priority: TaskPriority = .medium,
-        createdAt: Date = Date()
+        createdAt: Date = Date(),
+        hasReminder: Bool = false,
+        reminderDate: Date? = nil
     ) {
         self.id = id
         self.title = title
@@ -56,5 +60,21 @@ public struct TaskItem: Identifiable, Codable, Equatable {
         self.isCompleted = isCompleted
         self.priority = priority
         self.createdAt = createdAt
+        self.hasReminder = hasReminder
+        self.reminderDate = reminderDate ?? dueDate
+    }
+}
+
+public struct WidgetTaskItem: Codable, Identifiable {
+    public var id: String
+    public var title: String
+    public var isCompleted: Bool
+    public var priority: String
+
+    public init(id: String, title: String, isCompleted: Bool, priority: String) {
+        self.id = id
+        self.title = title
+        self.isCompleted = isCompleted
+        self.priority = priority
     }
 }
