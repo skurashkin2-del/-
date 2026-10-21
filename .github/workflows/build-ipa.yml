@@ -1,0 +1,46 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Unsigned IPA
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode Version
+        run: |
+          sudo xcode-select -s /Applications/Xcode_15.4.app || sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
+
+      - name: Build Archive
+        run: |
+          xcodebuild -project ToDoList.xcodeproj \
+            -scheme ToDoList \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath build/ToDoList.xcarchive \
+            archive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Package to IPA
+        run: |
+          mkdir -p Payload
+          cp -r build/ToDoList.xcarchive/Products/Applications/ToDoList.app Payload/
+          zip -qr ToDoList.ipa Payload
+          ls -lh ToDoList.ipa
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ToDoList-IPA
+          path: ToDoList.ipa
+          retention-days: 14
