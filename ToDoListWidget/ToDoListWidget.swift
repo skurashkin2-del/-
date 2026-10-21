@@ -1,5 +1,6 @@
 import WidgetKit
 import SwiftUI
+import AppIntents
 
 struct WidgetTaskItem: Codable, Identifiable {
     var id: String
@@ -35,7 +36,6 @@ struct Provider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<TaskEntry>) -> ()) {
         let entry = loadTasksFromStorage()
-        // Refresh periodically (every 30 minutes)
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date()
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
         completion(timeline)
@@ -56,6 +56,59 @@ struct Provider: TimelineProvider {
         }
 
         return TaskEntry(date: Date(), tasks: [])
+    }
+}
+
+@available(iOS 16.0, *)
+struct ToggleTaskIntent: AppIntent {
+    static var title: LocalizedStringResource = "Отметить задачу"
+
+    @Parameter(title: "ID Задачи")
+    var taskId: String
+
+    init() {}
+    init(taskId: String) {
+        self.taskId = taskId
+    }
+
+    func perform() async throws -> some IntentResult {
+        let suite = "group.com.user.todolist"
+        let key = "widget_today_tasks"
+        var data = UserDefaults(suiteName: suite)?.data(forKey: key)
+        if data == nil {
+            data = UserDefaults.standard.data(forKey: key)
+        }
+        if let data = data,
+           var items = try? JSONDecoder().decode([WidgetTaskItem].self, from: data) {
+            if let idx = items.firstIndex(where: { $0.id == taskId }) {
+                items[idx].isCompleted.toggle()
+                if let updated = try? JSONEncoder().encode(items) {
+                    UserDefaults(suiteName: suite)?.set(updated, forKey: key)
+                    UserDefaults.standard.set(updated, forKey: key)
+                }
+            }
+        }
+        return .result()
+    }
+}
+
+struct TaskCheckboxCircle: View {
+    let isCompleted: Bool
+
+    var body: some View {
+        Circle()
+            .stroke(isCompleted ? Color.green : Color.secondary.opacity(0.4), lineWidth: 1.5)
+            .background(isCompleted ? Circle().fill(Color.green) : Circle().fill(Color.clear))
+            .frame(width: 10, height: 10)
+            .overlay(
+                Group {
+                    if isCompleted {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 6, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                }
+            )
     }
 }
 
@@ -123,19 +176,14 @@ struct ToDoListWidgetEntryView: View {
                 VStack(alignment: .leading, spacing: 5) {
                     ForEach(entry.tasks.prefix(3)) { task in
                         HStack(spacing: 6) {
-                            Circle()
-                                .stroke(task.isCompleted ? Color.green : Color.secondary.opacity(0.4), lineWidth: 1.5)
-                                .background(task.isCompleted ? Circle().fill(Color.green) : Circle().fill(Color.clear))
-                                .frame(width: 9, height: 9)
-                                .overlay(
-                                    Group {
-                                        if task.isCompleted {
-                                            Image(systemName: "checkmark")
-                                                .font(.system(size: 5, weight: .bold))
-                                                .foregroundColor(.white)
-                                        }
-                                    }
-                                )
+                            if #available(iOS 17.0, *) {
+                                Button(intent: ToggleTaskIntent(taskId: task.id)) {
+                                    TaskCheckboxCircle(isCompleted: task.isCompleted)
+                                }
+                                .buttonStyle(.plain)
+                            } else {
+                                TaskCheckboxCircle(isCompleted: task.isCompleted)
+                            }
 
                             Text(task.title)
                                 .font(.system(size: 11, weight: task.isCompleted ? .regular : .medium))

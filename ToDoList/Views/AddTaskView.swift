@@ -13,6 +13,10 @@ public struct AddTaskView: View {
     @State private var priority: TaskPriority = .medium
     @State private var hasReminder: Bool = false
     @State private var reminderDate: Date = Date()
+    @State private var recurrence: RecurrenceRule = .none
+    @State private var categoryId: String = "personal"
+    @State private var subtasks: [SubTask] = []
+    @State private var newSubtaskTitle: String = ""
 
     public init(taskManager: TaskManager, initialDate: Date, editingTask: TaskItem? = nil) {
         self.taskManager = taskManager
@@ -36,9 +40,32 @@ public struct AddTaskView: View {
                         .font(.system(size: 15))
                 }
 
-                Section(header: Text("Дата и время")) {
+                Section(header: Text("Категория")) {
+                    Picker("Категория", selection: $categoryId) {
+                        ForEach(taskManager.categories.filter { $0.id != "all" }) { cat in
+                            HStack {
+                                Image(systemName: cat.icon)
+                                    .foregroundColor(cat.color)
+                                Text(cat.name)
+                            }
+                            .tag(cat.id)
+                        }
+                    }
+                }
+
+                Section(header: Text("Дата и повтор")) {
                     DatePicker("Срок", selection: $dueDate, displayedComponents: [.date, .hourAndMinute])
                         .datePickerStyle(.compact)
+
+                    Picker("Повтор", selection: $recurrence) {
+                        ForEach(RecurrenceRule.allCases) { rule in
+                            HStack {
+                                Image(systemName: rule.iconName)
+                                Text(rule.rawValue)
+                            }
+                            .tag(rule)
+                        }
+                    }
                 }
 
                 Section(header: Text("Напоминание")) {
@@ -61,6 +88,40 @@ public struct AddTaskView: View {
                     if hasReminder {
                         DatePicker("Время напоминания", selection: $reminderDate, displayedComponents: [.date, .hourAndMinute])
                             .datePickerStyle(.compact)
+                    }
+                }
+
+                Section(header: Text("Подзадачи (чек-лист)")) {
+                    ForEach(subtasks) { subtask in
+                        HStack {
+                            Image(systemName: subtask.isCompleted ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(subtask.isCompleted ? .green : .secondary)
+                            Text(subtask.title)
+                                .strikethrough(subtask.isCompleted)
+                            Spacer()
+                            Button(action: {
+                                subtasks.removeAll { $0.id == subtask.id }
+                            }) {
+                                Image(systemName: "trash")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.red.opacity(0.8))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    HStack {
+                        TextField("Новый пункт...", text: $newSubtaskTitle)
+                            .onSubmit {
+                                addSubtask()
+                            }
+
+                        Button(action: addSubtask) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 20))
+                                .foregroundColor(.accentColor)
+                        }
+                        .disabled(newSubtaskTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
                 }
 
@@ -104,6 +165,9 @@ public struct AddTaskView: View {
                     priority = task.priority
                     hasReminder = task.hasReminder
                     reminderDate = task.reminderDate ?? task.dueDate
+                    recurrence = task.recurrence
+                    categoryId = task.categoryId
+                    subtasks = task.subtasks
                 } else {
                     let calendar = Calendar.current
                     let now = Date()
@@ -121,6 +185,13 @@ public struct AddTaskView: View {
         }
     }
 
+    private func addSubtask() {
+        let trimmed = newSubtaskTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        subtasks.append(SubTask(title: trimmed, isCompleted: false))
+        newSubtaskTitle = ""
+    }
+
     private func save() {
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedTitle.isEmpty else { return }
@@ -132,6 +203,9 @@ public struct AddTaskView: View {
             task.priority = priority
             task.hasReminder = hasReminder
             task.reminderDate = hasReminder ? reminderDate : nil
+            task.recurrence = recurrence
+            task.categoryId = categoryId
+            task.subtasks = subtasks
             taskManager.updateTask(task)
         } else {
             taskManager.addTask(
@@ -140,7 +214,10 @@ public struct AddTaskView: View {
                 dueDate: dueDate,
                 priority: priority,
                 hasReminder: hasReminder,
-                reminderDate: hasReminder ? reminderDate : nil
+                reminderDate: hasReminder ? reminderDate : nil,
+                recurrence: recurrence,
+                categoryId: categoryId,
+                subtasks: subtasks
             )
         }
         presentationMode.wrappedValue.dismiss()

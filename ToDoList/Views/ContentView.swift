@@ -12,7 +12,10 @@ public struct ContentView: View {
     @StateObject private var taskManager = TaskManager()
     @State private var selectedDate: Date = Date()
     @State private var filter: TaskFilter = .all
+    @State private var selectedCategoryId: String = "all"
     @State private var isShowingAddTask: Bool = false
+    @State private var isShowingStats: Bool = false
+    @State private var isShowingSearch: Bool = false
     @State private var taskToEdit: TaskItem? = nil
 
     private let calendar = Calendar.current
@@ -26,7 +29,7 @@ public struct ContentView: View {
     }
 
     private var tasksForSelectedDate: [TaskItem] {
-        let dayTasks = taskManager.tasks(for: selectedDate)
+        let dayTasks = taskManager.tasks(for: selectedDate, categoryId: selectedCategoryId)
         switch filter {
         case .all:
             return dayTasks
@@ -35,6 +38,10 @@ public struct ContentView: View {
         case .completed:
             return dayTasks.filter { $0.isCompleted }
         }
+    }
+
+    private var overdueTasksList: [TaskItem] {
+        taskManager.overdueTasks()
     }
 
     private var totalCount: Int {
@@ -58,19 +65,45 @@ public struct ContentView: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    // Week Strip
-                    WeekCalendarView(selectedDate: $selectedDate, taskManager: taskManager)
-                        .padding(.bottom, 6)
-                        .background(Color(UIColor.systemBackground))
-                        .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 3)
+                    // Overdue Rollover Banner
+                    if !overdueTasksList.isEmpty {
+                        overdueBannerView
+                    }
 
-                    // Subheader with progress
+                    // Week Calendar Strip
+                    WeekCalendarView(selectedDate: $selectedDate, taskManager: taskManager)
+                        .padding(.bottom, 4)
+                        .background(Color(UIColor.systemBackground))
+
+                    // Categories Horizontal Bar
+                    categorySelectorView
+                        .background(Color(UIColor.systemBackground))
+                        .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
+
+                    // Subheader with progress & Streak
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(formattedDateTitle)
-                                    .font(.system(size: 17, weight: .bold, design: .rounded))
-                                    .foregroundColor(.primary)
+                                HStack(spacing: 6) {
+                                    Text(formattedDateTitle)
+                                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                                        .foregroundColor(.primary)
+
+                                    if taskManager.streakCount > 0 {
+                                        HStack(spacing: 3) {
+                                            Image(systemName: "flame.fill")
+                                                .font(.system(size: 11))
+                                                .foregroundColor(.orange)
+                                            Text("\(taskManager.streakCount)")
+                                                .font(.system(size: 11, weight: .bold))
+                                                .foregroundColor(.orange)
+                                        }
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.orange.opacity(0.12))
+                                        .clipShape(Capsule())
+                                    }
+                                }
 
                                 if totalCount > 0 {
                                     Text("\(completedCount) из \(totalCount) завершено")
@@ -85,7 +118,7 @@ public struct ContentView: View {
 
                             Spacer()
 
-                            // Progress ring/badge
+                            // Progress ring
                             if totalCount > 0 {
                                 ZStack {
                                     Circle()
@@ -114,8 +147,8 @@ public struct ContentView: View {
                         .pickerStyle(.segmented)
                     }
                     .padding(.horizontal)
-                    .padding(.top, 12)
-                    .padding(.bottom, 10)
+                    .padding(.top, 10)
+                    .padding(.bottom, 8)
 
                     // Task List or Empty View
                     if tasksForSelectedDate.isEmpty {
@@ -125,6 +158,7 @@ public struct ContentView: View {
                             ForEach(tasksForSelectedDate) { task in
                                 TaskRowView(
                                     task: task,
+                                    taskManager: taskManager,
                                     onToggle: {
                                         taskManager.toggleTaskCompletion(task)
                                     },
@@ -163,7 +197,7 @@ public struct ContentView: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "plus")
                                     .font(.system(size: 18, weight: .bold))
-                                Text("Добавить задачу")
+                                Text("Добавить")
                                     .font(.system(size: 16, weight: .semibold))
                             }
                             .foregroundColor(.white)
@@ -183,12 +217,30 @@ public struct ContentView: View {
             .navigationTitle("Мой План")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {
-                        isShowingAddTask = true
+                        isShowingStats = true
                     }) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 20))
+                        Image(systemName: "chart.bar.xaxis")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    HStack(spacing: 14) {
+                        Button(action: {
+                            isShowingSearch = true
+                        }) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 16, weight: .semibold))
+                        }
+
+                        Button(action: {
+                            isShowingAddTask = true
+                        }) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 20))
+                        }
                     }
                 }
             }
@@ -198,6 +250,79 @@ public struct ContentView: View {
             .sheet(item: $taskToEdit) { task in
                 AddTaskView(taskManager: taskManager, initialDate: task.dueDate, editingTask: task)
             }
+            .sheet(isPresented: $isShowingStats) {
+                StatsView(taskManager: taskManager)
+            }
+            .sheet(isPresented: $isShowingSearch) {
+                SearchView(taskManager: taskManager)
+            }
+        }
+    }
+
+    private var overdueBannerView: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "exclamationmark.arrow.circlepath")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.orange)
+
+            Text("Есть \(overdueTasksList.count) невыполненных дел с прошлых дней")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.primary)
+
+            Spacer()
+
+            Button(action: {
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.success)
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                    taskManager.rolloverOverdueTasksToToday()
+                }
+            }) {
+                Text("На сегодня")
+                    .font(.system(size: 12, weight: .bold))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Color.orange)
+                    .foregroundColor(.white)
+                    .clipShape(Capsule())
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(Color.orange.opacity(0.12))
+    }
+
+    private var categorySelectorView: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(taskManager.categories) { cat in
+                    let isSelected = selectedCategoryId == cat.id
+                    Button(action: {
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                            selectedCategoryId = cat.id
+                        }
+                    }) {
+                        HStack(spacing: 5) {
+                            Image(systemName: cat.icon)
+                                .font(.system(size: 11))
+                            Text(cat.name)
+                                .font(.system(size: 12, weight: .semibold))
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            isSelected ?
+                            cat.color :
+                            Color(UIColor.secondarySystemBackground)
+                        )
+                        .foregroundColor(isSelected ? .white : .primary)
+                        .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
         }
     }
 
@@ -213,7 +338,7 @@ public struct ContentView: View {
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.primary)
 
-                Text(filter == .completed ? "Отметьте задачи в списке, чтобы они появились здесь." : "Нажмите кнопку ниже, чтобы запланировать первое дело на этот день.")
+                Text(filter == .completed ? "Отметьте задачи в списке, чтобы они появились здесь." : "Нажмите кнопку «Добавить», чтобы запланировать дело.")
                     .font(.system(size: 14))
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)

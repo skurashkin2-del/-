@@ -15,6 +15,8 @@
 		EB816336A8DFF63798341685 /* WeekCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD27E57B318380E63E3B0A3 /* WeekCalendarView.swift */; };
 		543B49D4CD5AF90BA893AA69 /* TaskRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76A4A62F81B9F293BC19BE2E /* TaskRowView.swift */; };
 		0C4A7A29039E7EE0F773DF7C /* AddTaskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CCFD063EE2AEE356D6BF50A /* AddTaskView.swift */; };
+		9F7CAC7F387F7818FCDF206D /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AC9E96602E447622517655 /* StatsView.swift */; };
+		821B2CB339AF257DF3E13491 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35542E275F00FBB1F53FCE1 /* SearchView.swift */; };
 		2EA25826B7191AC04A0C8A9F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 51E71D20947AEDCC270BC4AA /* Assets.xcassets */; };
 		59447D09FBEF5A0B5350A667 /* ToDoListWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FF229A6863C3ABDB8FD7BD /* ToDoListWidget.swift */; };
 		355374C8FA5E28D5FB058966 /* ToDoListWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 65D903D460DFF369E2A82A95 /* ToDoListWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -55,6 +57,8 @@
 		CCD27E57B318380E63E3B0A3 /* WeekCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekCalendarView.swift; sourceTree = "<group>"; };
 		76A4A62F81B9F293BC19BE2E /* TaskRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRowView.swift; sourceTree = "<group>"; };
 		2CCFD063EE2AEE356D6BF50A /* AddTaskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTaskView.swift; sourceTree = "<group>"; };
+		39AC9E96602E447622517655 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
+		A35542E275F00FBB1F53FCE1 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		B887469BF8E739D4840ED0AE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		51E71D20947AEDCC270BC4AA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		19FF229A6863C3ABDB8FD7BD /* ToDoListWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToDoListWidget.swift; sourceTree = "<group>"; };
@@ -142,6 +146,8 @@
 				CCD27E57B318380E63E3B0A3 /* WeekCalendarView.swift */,
 				76A4A62F81B9F293BC19BE2E /* TaskRowView.swift */,
 				2CCFD063EE2AEE356D6BF50A /* AddTaskView.swift */,
+				39AC9E96602E447622517655 /* StatsView.swift */,
+				A35542E275F00FBB1F53FCE1 /* SearchView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -263,6 +269,8 @@
 				EB816336A8DFF63798341685 /* WeekCalendarView.swift in Sources */,
 				543B49D4CD5AF90BA893AA69 /* TaskRowView.swift in Sources */,
 				0C4A7A29039E7EE0F773DF7C /* AddTaskView.swift in Sources */,
+				9F7CAC7F387F7818FCDF206D /* StatsView.swift in Sources */,
+				821B2CB339AF257DF3E13491 /* SearchView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
