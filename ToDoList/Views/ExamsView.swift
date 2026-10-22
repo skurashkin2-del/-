@@ -49,6 +49,35 @@ public struct ExamsView: View {
                     }
                 } else {
                     List {
+                        Section {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "hand.tap.fill")
+                                        .foregroundColor(.orange)
+                                    Text("Настройка виджета на рабочем столе:")
+                                        .font(.system(size: 13, weight: .bold))
+                                }
+                                Text("Зажмите виджет на экране ➔ нажмите «Изменить виджет» ➔ выберите конкретный предмет или введите своё событие!")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+
+                                Button(action: {
+                                    let generator = UINotificationFeedbackGenerator()
+                                    generator.notificationOccurred(.success)
+                                    taskManager.syncToWidget()
+                                }) {
+                                    HStack(spacing: 5) {
+                                        Image(systemName: "arrow.triangle.2.circlepath")
+                                        Text("Обновить виджеты сейчас")
+                                    }
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(.accentColor)
+                                    .padding(.top, 2)
+                                }
+                            }
+                            .padding(.vertical, 6)
+                        }
+
                         ForEach(sortedExams) { exam in
                             ExamCardView(
                                 exam: exam,

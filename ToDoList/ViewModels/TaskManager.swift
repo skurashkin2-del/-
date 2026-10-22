@@ -338,8 +338,16 @@ public class TaskManager: ObservableObject {
     // MARK: - Widget Synchronization
     public func syncToWidget() {
         let today = Date()
-        let todayTasks = tasks(for: today)
-        let widgetItems = todayTasks.map {
+        var dayTasks = tasks(for: today)
+        // If no tasks specifically today, show upcoming uncompleted tasks so widget is never blank
+        if dayTasks.isEmpty {
+            dayTasks = tasks.filter { !$0.isCompleted }.sorted { $0.dueDate < $1.dueDate }
+        }
+        if dayTasks.isEmpty {
+            dayTasks = tasks.sorted { $0.dueDate > $1.dueDate }
+        }
+
+        let widgetItems = dayTasks.prefix(8).map {
             WidgetTaskItem(
                 id: $0.id.uuidString,
                 title: $0.title,
@@ -358,33 +366,26 @@ public class TaskManager: ObservableObject {
             )
         }
 
-        // Encode tasks
-        if let tasksData = try? JSONEncoder().encode(widgetItems) {
-            if let groupDefaults = UserDefaults(suiteName: widgetSuiteName) {
-                groupDefaults.set(tasksData, forKey: widgetStorageKey)
-                groupDefaults.synchronize()
+        let suites = [
+            "group.com.user.todolist",
+            "group.com.user.todolist.widget"
+        ]
+
+        if let tasksData = try? JSONEncoder().encode(widgetItems),
+           let examsData = try? JSONEncoder().encode(widgetExams) {
+            for suite in suites {
+                if let groupDefaults = UserDefaults(suiteName: suite) {
+                    groupDefaults.set(tasksData, forKey: widgetStorageKey)
+                    groupDefaults.set(examsData, forKey: widgetExamsStorageKey)
+                    groupDefaults.synchronize()
+                }
+                if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: suite) {
+                    try? tasksData.write(to: containerURL.appendingPathComponent("widget_tasks.json"))
+                    try? examsData.write(to: containerURL.appendingPathComponent("widget_exams.json"))
+                }
             }
             UserDefaults.standard.set(tasksData, forKey: widgetStorageKey)
-
-            // Also write to shared file container if App Groups directory exists
-            if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: widgetSuiteName) {
-                let fileURL = containerURL.appendingPathComponent("widget_tasks.json")
-                try? tasksData.write(to: fileURL)
-            }
-        }
-
-        // Encode exams
-        if let examsData = try? JSONEncoder().encode(widgetExams) {
-            if let groupDefaults = UserDefaults(suiteName: widgetSuiteName) {
-                groupDefaults.set(examsData, forKey: widgetExamsStorageKey)
-                groupDefaults.synchronize()
-            }
             UserDefaults.standard.set(examsData, forKey: widgetExamsStorageKey)
-
-            if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: widgetSuiteName) {
-                let fileURL = containerURL.appendingPathComponent("widget_exams.json")
-                try? examsData.write(to: fileURL)
-            }
         }
 
         WidgetCenter.shared.reloadAllTimelines()

@@ -3,103 +3,303 @@ import SwiftUI
 import AppIntents
 
 // MARK: - Models
-struct WidgetTaskItem: Codable, Identifiable {
-    var id: String
-    var title: String
-    var isCompleted: Bool
-    var priority: String
+public struct WidgetTaskItem: Codable, Identifiable {
+    public var id: String
+    public var title: String
+    public var isCompleted: Bool
+    public var priority: String
+
+    public init(id: String, title: String, isCompleted: Bool, priority: String) {
+        self.id = id
+        self.title = title
+        self.isCompleted = isCompleted
+        self.priority = priority
+    }
 }
 
-struct WidgetExamItem: Codable, Identifiable {
-    var id: String
-    var title: String
-    var daysRemaining: Int
-    var dateString: String
-    var categoryId: String
+public struct WidgetExamItem: Codable, Identifiable {
+    public var id: String
+    public var title: String
+    public var daysRemaining: Int
+    public var dateString: String
+    public var categoryId: String
+
+    public init(id: String, title: String, daysRemaining: Int, dateString: String, categoryId: String) {
+        self.id = id
+        self.title = title
+        self.daysRemaining = daysRemaining
+        self.dateString = dateString
+        self.categoryId = categoryId
+    }
 }
 
+public struct DisplayExam {
+    public var title: String
+    public var daysRemaining: Int
+    public var dateString: String
+    public var colorHex: String
+}
+
+// MARK: - App Storage Helper
+enum WidgetStorage {
+    static let suiteNames = [
+        "group.com.user.todolist",
+        "group.com.user.todolist.widget"
+    ]
+    static let tasksKey = "widget_today_tasks"
+    static let examsKey = "widget_exams_list"
+
+    static func loadTasks() -> [WidgetTaskItem] {
+        // 1. Try Shared Container Directory Files
+        for suite in suiteNames {
+            if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: suite) {
+                let fileURL = containerURL.appendingPathComponent("widget_tasks.json")
+                if let fileData = try? Data(contentsOf: fileURL),
+                   let items = try? JSONDecoder().decode([WidgetTaskItem].self, from: fileData),
+                   !items.isEmpty {
+                    return items
+                }
+            }
+        }
+
+        // 2. Try App Group UserDefaults
+        for suite in suiteNames {
+            if let groupDefaults = UserDefaults(suiteName: suite),
+               let data = groupDefaults.data(forKey: tasksKey),
+               let items = try? JSONDecoder().decode([WidgetTaskItem].self, from: data),
+               !items.isEmpty {
+                return items
+            }
+        }
+
+        // 3. Try Standard UserDefaults
+        if let data = UserDefaults.standard.data(forKey: tasksKey),
+           let items = try? JSONDecoder().decode([WidgetTaskItem].self, from: data),
+           !items.isEmpty {
+            return items
+        }
+
+        // Fallback default tasks
+        return [
+            WidgetTaskItem(id: "1", title: "Повторить орфоэпию (Русский)", isCompleted: false, priority: "Срочный"),
+            WidgetTaskItem(id: "2", title: "Решить вариант (Математика)", isCompleted: true, priority: "Обычный"),
+            WidgetTaskItem(id: "3", title: "Черновик заметки (Журналистика)", isCompleted: false, priority: "Обычный")
+        ]
+    }
+
+    static func loadExams() -> [WidgetExamItem] {
+        for suite in suiteNames {
+            if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: suite) {
+                let fileURL = containerURL.appendingPathComponent("widget_exams.json")
+                if let fileData = try? Data(contentsOf: fileURL),
+                   let items = try? JSONDecoder().decode([WidgetExamItem].self, from: fileData),
+                   !items.isEmpty {
+                    return items
+                }
+            }
+        }
+
+        for suite in suiteNames {
+            if let groupDefaults = UserDefaults(suiteName: suite),
+               let data = groupDefaults.data(forKey: examsKey),
+               let items = try? JSONDecoder().decode([WidgetExamItem].self, from: data),
+               !items.isEmpty {
+                return items
+            }
+        }
+
+        if let data = UserDefaults.standard.data(forKey: examsKey),
+           let items = try? JSONDecoder().decode([WidgetExamItem].self, from: data),
+           !items.isEmpty {
+            return items
+        }
+
+        return []
+    }
+}
+
+// MARK: - App Intent for Configurable Exam Widget
+public enum ExamChoice: String, AppEnum {
+    case nearest = "nearest"
+    case russian = "russian"
+    case math = "math"
+    case literature = "literature"
+    case social = "social"
+    case journalism = "journalism"
+
+    public static var typeDisplayRepresentation: TypeDisplayRepresentation = "Событие"
+
+    public static var caseDisplayRepresentations: [ExamChoice: DisplayRepresentation] = [
+        .nearest: "Ближайший экзамен",
+        .russian: "ЕГЭ Русский язык",
+        .math: "ЕГЭ Базовая математика",
+        .literature: "ЕГЭ Литература",
+        .social: "ЕГЭ Обществознание",
+        .journalism: "ДВИ по Журналистике"
+    ]
+}
+
+public struct SelectExamIntent: WidgetConfigurationIntent {
+    public static var title: LocalizedStringResource = "Настроить отсчёт"
+    public static var description = IntentDescription("Выберите экзамен или введите своё событие.")
+
+    @Parameter(title: "Экзамен", default: .nearest)
+    public var selectedExam: ExamChoice
+
+    @Parameter(title: "Своё название (опционально)")
+    public var customTitle: String?
+
+    @Parameter(title: "Своя дата (ДД.ММ.ГГГГ, опционально)")
+    public var customDate: String?
+
+    public init() {}
+}
+
+// MARK: - Exam Provider with AppIntent
+struct ExamEntry: TimelineEntry {
+    let date: Date
+    let exam: DisplayExam
+}
+
+struct ExamAppIntentProvider: AppIntentTimelineProvider {
+    typealias Entry = ExamEntry
+    typealias Intent = SelectExamIntent
+
+    func placeholder(in context: Context) -> ExamEntry {
+        ExamEntry(date: Date(), exam: resolveExam(configuration: SelectExamIntent()))
+    }
+
+    func snapshot(for configuration: SelectExamIntent, in context: Context) async -> ExamEntry {
+        ExamEntry(date: Date(), exam: resolveExam(configuration: configuration))
+    }
+
+    func timeline(for configuration: SelectExamIntent, in context: Context) async -> Timeline<ExamEntry> {
+        let exam = resolveExam(configuration: configuration)
+        let entry = ExamEntry(date: Date(), exam: exam)
+        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date()
+        return Timeline(entries: [entry], policy: .after(nextUpdate))
+    }
+
+    private func resolveExam(configuration: SelectExamIntent) -> DisplayExam {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+
+        // 1. If user entered custom event title and date
+        if let customTitle = configuration.customTitle?.trimmingCharacters(in: .whitespacesAndNewlines), !customTitle.isEmpty {
+            let targetDate = parseDate(configuration.customDate) ?? Date().addingTimeInterval(86400 * 30)
+            let diff = calendar.dateComponents([.day], from: today, to: calendar.startOfDay(for: targetDate)).day ?? 0
+            let dateStr = formatDate(targetDate)
+            return DisplayExam(title: customTitle, daysRemaining: diff, dateString: dateStr, colorHex: "#F59E0B")
+        }
+
+        // 2. Try synced exams from app
+        let synced = WidgetStorage.loadExams()
+
+        func findSynced(categoryId: String) -> DisplayExam? {
+            if let match = synced.first(where: { $0.categoryId == categoryId }) {
+                return DisplayExam(title: match.title, daysRemaining: match.daysRemaining, dateString: match.dateString, colorHex: colorHex(for: categoryId))
+            }
+            return nil
+        }
+
+        switch configuration.selectedExam {
+        case .nearest:
+            if let first = synced.first {
+                return DisplayExam(title: first.title, daysRemaining: first.daysRemaining, dateString: first.dateString, colorHex: colorHex(for: first.categoryId))
+            }
+            return fallbackExam(choice: .russian, today: today)
+        case .russian:
+            return findSynced(categoryId: "russian") ?? fallbackExam(choice: .russian, today: today)
+        case .math:
+            return findSynced(categoryId: "math") ?? fallbackExam(choice: .math, today: today)
+        case .literature:
+            return findSynced(categoryId: "literature") ?? fallbackExam(choice: .literature, today: today)
+        case .social:
+            return findSynced(categoryId: "social") ?? fallbackExam(choice: .social, today: today)
+        case .journalism:
+            return findSynced(categoryId: "journalism") ?? fallbackExam(choice: .journalism, today: today)
+        }
+    }
+
+    private func fallbackExam(choice: ExamChoice, today: Date) -> DisplayExam {
+        let calendar = Calendar.current
+        let year = calendar.component(.year, from: today)
+
+        var comp = DateComponents()
+        comp.year = year
+
+        var title = "ЕГЭ"
+        var color = "#EF4444"
+
+        switch choice {
+        case .russian, .nearest:
+            title = "ЕГЭ Русский язык"
+            comp.month = 5; comp.day = 28
+            color = "#EF4444"
+        case .math:
+            title = "ЕГЭ Базовая математика"
+            comp.month = 5; comp.day = 31
+            color = "#3B82F6"
+        case .social:
+            title = "ЕГЭ Обществознание"
+            comp.month = 6; comp.day = 4
+            color = "#10B981"
+        case .literature:
+            title = "ЕГЭ Литература"
+            comp.month = 6; comp.day = 8
+            color = "#8B5CF6"
+        case .journalism:
+            title = "ДВИ Журналистика"
+            comp.month = 7; comp.day = 10
+            color = "#F59E0B"
+        }
+
+        var target = calendar.date(from: comp) ?? today.addingTimeInterval(86400 * 30)
+        if target < today {
+            comp.year = year + 1
+            target = calendar.date(from: comp) ?? today.addingTimeInterval(86400 * 30)
+        }
+
+        let diff = calendar.dateComponents([.day], from: today, to: calendar.startOfDay(for: target)).day ?? 0
+        return DisplayExam(title: title, daysRemaining: diff, dateString: formatDate(target), colorHex: color)
+    }
+
+    private func parseDate(_ string: String?) -> Date? {
+        guard let s = string?.trimmingCharacters(in: .whitespacesAndNewlines), !s.isEmpty else { return nil }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd.MM.yyyy"
+        if let d = formatter.date(from: s) { return d }
+        formatter.dateFormat = "dd/MM/yyyy"
+        if let d = formatter.date(from: s) { return d }
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.date(from: s)
+    }
+
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ru_RU")
+        formatter.dateFormat = "d MMMM"
+        return formatter.string(from: date)
+    }
+
+    private func colorHex(for categoryId: String) -> String {
+        switch categoryId {
+        case "russian": return "#EF4444"
+        case "math": return "#3B82F6"
+        case "literature": return "#8B5CF6"
+        case "social": return "#10B981"
+        case "journalism": return "#F59E0B"
+        default: return "#6366F1"
+        }
+    }
+}
+
+// MARK: - Task Timeline Provider
 struct TaskEntry: TimelineEntry {
     let date: Date
     let tasks: [WidgetTaskItem]
 }
 
-struct ExamEntry: TimelineEntry {
-    let date: Date
-    let exams: [WidgetExamItem]
-}
-
-// MARK: - Helper Storage Reader
-enum WidgetStorage {
-    static let suiteName = "group.com.user.todolist"
-    static let tasksKey = "widget_today_tasks"
-    static let examsKey = "widget_exams_list"
-
-    static func loadTasks() -> [WidgetTaskItem] {
-        var data: Data? = nil
-
-        // 1. Try Shared Container Directory File
-        if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: suiteName) {
-            let fileURL = containerURL.appendingPathComponent("widget_tasks.json")
-            if let fileData = try? Data(contentsOf: fileURL) {
-                data = fileData
-            }
-        }
-
-        // 2. Try App Group UserDefaults
-        if data == nil, let groupDefaults = UserDefaults(suiteName: suiteName) {
-            data = groupDefaults.data(forKey: tasksKey)
-        }
-
-        // 3. Try Standard UserDefaults
-        if data == nil {
-            data = UserDefaults.standard.data(forKey: tasksKey)
-        }
-
-        if let data = data,
-           let items = try? JSONDecoder().decode([WidgetTaskItem].self, from: data) {
-            return items
-        }
-
-        // Fallback sample tasks
-        return [
-            WidgetTaskItem(id: "1", title: "Повторить орфоэпию", isCompleted: false, priority: "Срочный"),
-            WidgetTaskItem(id: "2", title: "Решить вариант по математике", isCompleted: true, priority: "Обычный"),
-            WidgetTaskItem(id: "3", title: "Черновик эссе / заметки", isCompleted: false, priority: "Обычный")
-        ]
-    }
-
-    static func loadExams() -> [WidgetExamItem] {
-        var data: Data? = nil
-
-        if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: suiteName) {
-            let fileURL = containerURL.appendingPathComponent("widget_exams.json")
-            if let fileData = try? Data(contentsOf: fileURL) {
-                data = fileData
-            }
-        }
-
-        if data == nil, let groupDefaults = UserDefaults(suiteName: suiteName) {
-            data = groupDefaults.data(forKey: examsKey)
-        }
-
-        if data == nil {
-            data = UserDefaults.standard.data(forKey: examsKey)
-        }
-
-        if let data = data,
-           let items = try? JSONDecoder().decode([WidgetExamItem].self, from: data) {
-            return items
-        }
-
-        return [
-            WidgetExamItem(id: "1", title: "ЕГЭ Русский язык", daysRemaining: 34, dateString: "28 мая", categoryId: "russian"),
-            WidgetExamItem(id: "2", title: "ЕГЭ Базовая математика", daysRemaining: 37, dateString: "31 мая", categoryId: "math"),
-            WidgetExamItem(id: "3", title: "ЕГЭ Обществознание", daysRemaining: 41, dateString: "4 июня", categoryId: "social")
-        ]
-    }
-}
-
-// MARK: - Task Timeline Provider
 struct TaskProvider: TimelineProvider {
     func placeholder(in context: Context) -> TaskEntry {
         TaskEntry(date: Date(), tasks: WidgetStorage.loadTasks())
@@ -116,25 +316,7 @@ struct TaskProvider: TimelineProvider {
     }
 }
 
-// MARK: - Exam Timeline Provider
-struct ExamProvider: TimelineProvider {
-    func placeholder(in context: Context) -> ExamEntry {
-        ExamEntry(date: Date(), exams: WidgetStorage.loadExams())
-    }
-
-    func getSnapshot(in context: Context, completion: @escaping (ExamEntry) -> ()) {
-        completion(ExamEntry(date: Date(), exams: WidgetStorage.loadExams()))
-    }
-
-    func getTimeline(in context: Context, completion: @escaping (Timeline<ExamEntry>) -> ()) {
-        let entry = ExamEntry(date: Date(), exams: WidgetStorage.loadExams())
-        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
-        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
-    }
-}
-
-// MARK: - App Intent for Interactive Toggle
-@available(iOS 16.0, *)
+// MARK: - Interactive Toggle Task Intent
 struct ToggleTaskIntent: AppIntent {
     static var title: LocalizedStringResource = "Отметить задачу"
 
@@ -151,11 +333,13 @@ struct ToggleTaskIntent: AppIntent {
         if let idx = items.firstIndex(where: { $0.id == taskId }) {
             items[idx].isCompleted.toggle()
             if let data = try? JSONEncoder().encode(items) {
-                UserDefaults(suiteName: WidgetStorage.suiteName)?.set(data, forKey: WidgetStorage.tasksKey)
-                UserDefaults.standard.set(data, forKey: WidgetStorage.tasksKey)
-                if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: WidgetStorage.suiteName) {
-                    try? data.write(to: containerURL.appendingPathComponent("widget_tasks.json"))
+                for suite in WidgetStorage.suiteNames {
+                    UserDefaults(suiteName: suite)?.set(data, forKey: WidgetStorage.tasksKey)
+                    if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: suite) {
+                        try? data.write(to: containerURL.appendingPathComponent("widget_tasks.json"))
+                    }
                 }
+                UserDefaults.standard.set(data, forKey: WidgetStorage.tasksKey)
             }
         }
         return .result()
@@ -201,132 +385,75 @@ struct ToDoListWidgetEntryView: View {
     var body: some View {
         switch family {
         case .accessoryCircular:
-            lockScreenCircularView
-        case .accessoryRectangular:
-            lockScreenRectangularView
-        case .accessoryInline:
-            lockScreenInlineView
-        case .systemMedium:
-            systemMediumView
-        default:
-            systemSmallView
-        }
-    }
-
-    // 1. Lock Screen: Circular
-    private var lockScreenCircularView: some View {
-        ZStack {
-            AccessoryWidgetBackground()
-            VStack(spacing: 1) {
-                if pendingCount == 0 {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 16, weight: .bold))
-                } else {
-                    Text("\(pendingCount)")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
-                    Image(systemName: "checklist")
-                        .font(.system(size: 8))
+            ZStack {
+                AccessoryWidgetBackground()
+                VStack(spacing: 1) {
+                    if pendingCount == 0 {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 16, weight: .bold))
+                    } else {
+                        Text("\(pendingCount)")
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                        Image(systemName: "checklist")
+                            .font(.system(size: 8))
+                    }
                 }
             }
-        }
-    }
+        case .accessoryRectangular:
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 4) {
+                    Image(systemName: "checklist")
+                        .font(.system(size: 11, weight: .bold))
+                    Text("План на сегодня")
+                        .font(.system(size: 11, weight: .bold))
+                    Spacer()
+                    Text("\(pendingCount)")
+                        .font(.system(size: 11, weight: .bold))
+                }
 
-    // 2. Lock Screen: Rectangular
-    private var lockScreenRectangularView: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: 4) {
-                Image(systemName: "checklist")
-                    .font(.system(size: 11, weight: .bold))
-                Text("План на сегодня")
-                    .font(.system(size: 11, weight: .bold))
-                Spacer()
-                Text("\(pendingCount)")
-                    .font(.system(size: 11, weight: .bold))
-            }
-
-            if let firstPending = entry.tasks.first(where: { !$0.isCompleted }) {
-                Text("• \(firstPending.title)")
-                    .font(.system(size: 11))
-                    .lineLimit(1)
-            } else {
-                Text("Все задачи выполнены! 🎉")
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
-            }
-        }
-    }
-
-    // 3. Lock Screen: Inline
-    private var lockScreenInlineView: some View {
-        HStack(spacing: 3) {
-            Image(systemName: "checklist")
-            if pendingCount == 0 {
-                Text("Все дела закрыты!")
-            } else {
-                Text("\(pendingCount) \(pendingCount == 1 ? "задача" : "задачи") осталось")
-            }
-        }
-    }
-
-    // 4. Home Screen: Small (.systemSmall)
-    private var systemSmallView: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack {
-                Text(weekdayString)
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.secondary)
-                Spacer()
-                Image(systemName: "checklist")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(.blue)
-            }
-
-            if entry.tasks.isEmpty {
-                Spacer()
-                VStack(spacing: 4) {
-                    Image(systemName: "sun.max.fill")
-                        .font(.system(size: 22))
-                        .foregroundColor(.orange)
-                    Text("Дел нет")
-                        .font(.system(size: 12, weight: .semibold))
+                if let firstPending = entry.tasks.first(where: { !$0.isCompleted }) {
+                    Text("• \(firstPending.title)")
+                        .font(.system(size: 11))
+                        .lineLimit(1)
+                } else {
+                    Text("Все задачи выполнены! 🎉")
+                        .font(.system(size: 11))
                         .foregroundColor(.secondary)
                 }
-                .frame(maxWidth: .infinity)
-                Spacer()
-            } else if pendingCount == 0 {
-                Spacer()
-                VStack(spacing: 4) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 22))
-                        .foregroundColor(.green)
-                    Text("Все сделано!")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.primary)
+            }
+        case .accessoryInline:
+            HStack(spacing: 3) {
+                Image(systemName: "checklist")
+                if pendingCount == 0 {
+                    Text("Все дела закрыты!")
+                } else {
+                    Text("\(pendingCount) \(pendingCount == 1 ? "задача" : "задачи") осталось")
                 }
-                .frame(maxWidth: .infinity)
-                Spacer()
-            } else {
-                Text("\(pendingCount) к выполнению")
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
+            }
+        case .systemMedium:
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text(weekdayString)
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("\(entry.tasks.filter { $0.isCompleted }.count) из \(entry.tasks.count) сделано")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.accentColor)
+                }
 
                 Divider()
-                    .padding(.vertical, 1)
 
                 VStack(alignment: .leading, spacing: 5) {
-                    ForEach(entry.tasks.prefix(3)) { task in
-                        HStack(spacing: 6) {
-                            if #available(iOS 17.0, *) {
-                                Button(intent: ToggleTaskIntent(taskId: task.id)) {
-                                    TaskCheckboxCircle(isCompleted: task.isCompleted)
-                                }
-                                .buttonStyle(.plain)
-                            } else {
+                    ForEach(entry.tasks.prefix(4)) { task in
+                        HStack(spacing: 7) {
+                            Button(intent: ToggleTaskIntent(taskId: task.id)) {
                                 TaskCheckboxCircle(isCompleted: task.isCompleted)
                             }
+                            .buttonStyle(.plain)
 
                             Text(task.title)
-                                .font(.system(size: 11, weight: task.isCompleted ? .regular : .medium))
+                                .font(.system(size: 12, weight: task.isCompleted ? .regular : .medium))
                                 .foregroundColor(task.isCompleted ? .secondary : .primary)
                                 .strikethrough(task.isCompleted)
                                 .lineLimit(1)
@@ -335,60 +462,89 @@ struct ToDoListWidgetEntryView: View {
                 }
                 Spacer(minLength: 0)
             }
-        }
-        .padding(12)
-        .widgetBackground()
-    }
-
-    // 5. Home Screen: Medium (.systemMedium)
-    private var systemMediumView: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(weekdayString)
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text("\(entry.tasks.filter { $0.isCompleted }.count) из \(entry.tasks.count) сделано")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(.accentColor)
+            .padding(14)
+            .containerBackground(for: .widget) {
+                Color(UIColor.secondarySystemBackground)
             }
-
-            Divider()
-
+        default:
+            // .systemSmall
             VStack(alignment: .leading, spacing: 5) {
-                ForEach(entry.tasks.prefix(4)) { task in
-                    HStack(spacing: 7) {
-                        if #available(iOS 17.0, *) {
-                            Button(intent: ToggleTaskIntent(taskId: task.id)) {
-                                TaskCheckboxCircle(isCompleted: task.isCompleted)
-                            }
-                            .buttonStyle(.plain)
-                        } else {
-                            TaskCheckboxCircle(isCompleted: task.isCompleted)
-                        }
+                HStack {
+                    Text(weekdayString)
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Image(systemName: "checklist")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.blue)
+                }
 
-                        Text(task.title)
-                            .font(.system(size: 12, weight: task.isCompleted ? .regular : .medium))
-                            .foregroundColor(task.isCompleted ? .secondary : .primary)
-                            .strikethrough(task.isCompleted)
-                            .lineLimit(1)
+                if entry.tasks.isEmpty {
+                    Spacer()
+                    VStack(spacing: 4) {
+                        Image(systemName: "sun.max.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(.orange)
+                        Text("Дел нет")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.secondary)
                     }
+                    .frame(maxWidth: .infinity)
+                    Spacer()
+                } else if pendingCount == 0 {
+                    Spacer()
+                    VStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(.green)
+                        Text("Все сделано!")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.primary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    Spacer()
+                } else {
+                    Text("\(pendingCount) к выполнению")
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+
+                    Divider()
+                        .padding(.vertical, 1)
+
+                    VStack(alignment: .leading, spacing: 5) {
+                        ForEach(entry.tasks.prefix(3)) { task in
+                            HStack(spacing: 6) {
+                                Button(intent: ToggleTaskIntent(taskId: task.id)) {
+                                    TaskCheckboxCircle(isCompleted: task.isCompleted)
+                                }
+                                .buttonStyle(.plain)
+
+                                Text(task.title)
+                                    .font(.system(size: 11, weight: task.isCompleted ? .regular : .medium))
+                                    .foregroundColor(task.isCompleted ? .secondary : .primary)
+                                    .strikethrough(task.isCompleted)
+                                    .lineLimit(1)
+                            }
+                        }
+                    }
+                    Spacer(minLength: 0)
                 }
             }
-            Spacer(minLength: 0)
+            .padding(12)
+            .containerBackground(for: .widget) {
+                Color(UIColor.secondarySystemBackground)
+            }
         }
-        .padding(14)
-        .widgetBackground()
     }
 }
 
-// MARK: - Views for Exam Widget
+// MARK: - Views for Configurable Exam Widget
 struct ExamWidgetEntryView: View {
-    var entry: ExamProvider.Entry
+    var entry: ExamAppIntentProvider.Entry
     @Environment(\.widgetFamily) var family
 
-    private var nearestExam: WidgetExamItem? {
-        entry.exams.first
+    private var accentColor: Color {
+        Color(hex: entry.exam.colorHex) ?? .orange
     }
 
     var body: some View {
@@ -397,14 +553,10 @@ struct ExamWidgetEntryView: View {
             ZStack {
                 AccessoryWidgetBackground()
                 VStack(spacing: 0) {
-                    if let exam = nearestExam {
-                        Text("\(exam.daysRemaining)")
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
-                        Text("дн")
-                            .font(.system(size: 8, weight: .semibold))
-                    } else {
-                        Image(systemName: "flag.checkered")
-                    }
+                    Text("\(entry.exam.daysRemaining)")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                    Text("дн")
+                        .font(.system(size: 8, weight: .semibold))
                 }
             }
         case .accessoryRectangular:
@@ -412,108 +564,118 @@ struct ExamWidgetEntryView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "timer")
                         .font(.system(size: 10, weight: .bold))
-                    Text("Экзамен")
-                        .font(.system(size: 10, weight: .bold))
-                }
-                if let exam = nearestExam {
-                    Text(exam.title)
-                        .font(.system(size: 12, weight: .bold))
+                    Text(entry.exam.title)
+                        .font(.system(size: 11, weight: .bold))
                         .lineLimit(1)
-                    Text("Через \(exam.daysRemaining) дн. (\(exam.dateString))")
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
-                } else {
-                    Text("Все экзамены сданы!")
-                        .font(.system(size: 11))
                 }
+                Text("Через \(entry.exam.daysRemaining) дн. (\(entry.exam.dateString))")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
             }
         case .accessoryInline:
-            if let exam = nearestExam {
-                Text("\(exam.title): через \(exam.daysRemaining) дн.")
-            } else {
-                Text("Экзамены сданы!")
-            }
+            Text("\(entry.exam.title): через \(entry.exam.daysRemaining) дн.")
         case .systemMedium:
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
+            HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 4) {
                         Image(systemName: "timer")
-                            .foregroundColor(.orange)
-                        Text("Экзамены и дедлайны")
-                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(accentColor)
+                        Text("ОБРАТНЫЙ ОТСЧЁТ")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.secondary)
                     }
+
+                    Spacer()
+
+                    Text(entry.exam.title)
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .lineLimit(2)
+
+                    Text(entry.exam.dateString)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
+
                     Spacer()
                 }
 
-                Divider()
+                Spacer()
 
-                VStack(alignment: .leading, spacing: 6) {
-                    ForEach(entry.exams.prefix(3)) { exam in
-                        HStack {
-                            Text(exam.title)
-                                .font(.system(size: 12, weight: .semibold))
-                                .lineLimit(1)
-                            Spacer()
-                            Text("\(exam.daysRemaining) дн.")
-                                .font(.system(size: 12, weight: .bold, design: .rounded))
-                                .foregroundColor(.orange)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.orange.opacity(0.12))
-                                .clipShape(Capsule())
-                        }
-                    }
+                VStack(spacing: 2) {
+                    Text("\(entry.exam.daysRemaining)")
+                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .foregroundColor(accentColor)
+
+                    Text(entry.exam.daysRemaining == 1 ? "день" : (entry.exam.daysRemaining < 5 ? "дня" : "дней"))
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.secondary)
                 }
-                Spacer(minLength: 0)
+                .padding(.trailing, 8)
             }
-            .padding(14)
-            .widgetBackground()
+            .padding(16)
+            .containerBackground(for: .widget) {
+                Color(UIColor.secondarySystemBackground)
+            }
         default:
             // .systemSmall
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Image(systemName: "timer")
                         .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.orange)
+                        .foregroundColor(accentColor)
                     Text("ДО ЭКЗАМЕНА")
                         .font(.system(size: 9, weight: .bold))
                         .foregroundColor(.secondary)
                     Spacer()
                 }
 
-                if let exam = nearestExam {
-                    Spacer(minLength: 0)
-                    Text("\(exam.daysRemaining)")
-                        .font(.system(size: 38, weight: .bold, design: .rounded))
-                        .foregroundColor(.orange)
+                Spacer(minLength: 0)
 
-                    Text(exam.daysRemaining == 1 ? "день остался" : (exam.daysRemaining < 5 ? "дня осталось" : "дней осталось"))
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.secondary)
+                Text("\(entry.exam.daysRemaining)")
+                    .font(.system(size: 38, weight: .bold, design: .rounded))
+                    .foregroundColor(accentColor)
 
-                    Text(exam.title)
-                        .font(.system(size: 12, weight: .bold))
-                        .lineLimit(1)
-                        .padding(.top, 2)
+                Text(entry.exam.daysRemaining == 1 ? "день остался" : (entry.exam.daysRemaining < 5 ? "дня осталось" : "дней осталось"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.secondary)
 
-                    Text(exam.dateString)
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
-                    Spacer(minLength: 0)
-                } else {
-                    Spacer()
-                    Text("Все сдано! 🎉")
-                        .font(.system(size: 14, weight: .bold))
-                    Spacer()
-                }
+                Text(entry.exam.title)
+                    .font(.system(size: 12, weight: .bold))
+                    .lineLimit(1)
+                    .padding(.top, 2)
+
+                Text(entry.exam.dateString)
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+
+                Spacer(minLength: 0)
             }
             .padding(12)
-            .widgetBackground()
+            .containerBackground(for: .widget) {
+                Color(UIColor.secondarySystemBackground)
+            }
         }
     }
 }
 
-// MARK: - Widget Configurations
+// MARK: - Color Hex Helper
+extension Color {
+    init?(hex: String) {
+        var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
+
+        var rgb: UInt64 = 0
+        guard Scanner(string: hexSanitized).scanHexInt64(&rgb) else { return nil }
+
+        let r = Double((rgb & 0xFF0000) >> 16) / 255.0
+        let g = Double((rgb & 0x00FF00) >> 8) / 255.0
+        let b = Double(rgb & 0x0000FF) / 255.0
+
+        self.init(red: r, green: g, blue: b)
+    }
+}
+
+// MARK: - Widgets
 struct ToDoListWidget: Widget {
     let kind: String = "ToDoListWidget"
 
@@ -537,11 +699,15 @@ struct ExamCountdownWidget: Widget {
     let kind: String = "ExamCountdownWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: ExamProvider()) { entry in
+        AppIntentConfiguration(
+            kind: kind,
+            intent: SelectExamIntent.self,
+            provider: ExamAppIntentProvider()
+        ) { entry in
             ExamWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("Отсчёт до экзаменов")
-        .description("Обратный отсчёт дней до ЕГЭ, олимпиад и дедлайнов.")
+        .description("Настраиваемый обратный отсчёт до конкретного экзамена, олимпиады или своего события.")
         .supportedFamilies([
             .systemSmall,
             .systemMedium,
@@ -558,19 +724,5 @@ struct ToDoListWidgetsBundle: WidgetBundle {
     var body: some Widget {
         ToDoListWidget()
         ExamCountdownWidget()
-    }
-}
-
-// MARK: - Background Compatibility Helper
-extension View {
-    @ViewBuilder
-    func widgetBackground() -> some View {
-        if #available(iOS 17.0, *) {
-            self.containerBackground(for: .widget) {
-                Color(UIColor.secondarySystemBackground)
-            }
-        } else {
-            self.background(Color(UIColor.secondarySystemBackground))
-        }
     }
 }
