@@ -10,18 +10,25 @@ public class TaskManager: ObservableObject {
         }
     }
 
+    @Published public var exams: [ExamEvent] = [] {
+        didSet {
+            saveExams()
+            syncToWidget()
+        }
+    }
+
     @Published public var categories: [TaskCategory] = TaskCategory.defaults
 
     private let storageKey = "TodoList_UserTasks_Storage_v1"
+    private let examsStorageKey = "TodoList_Exams_Storage_v1"
     private let widgetSuiteName = "group.com.user.todolist"
     private let widgetStorageKey = "widget_today_tasks"
+    private let widgetExamsStorageKey = "widget_exams_list"
     private let calendar = Calendar.current
 
     public init() {
         loadTasks()
-        if tasks.isEmpty {
-            loadInitialSampleTasks()
-        }
+        loadExams()
         NotificationManager.shared.requestAuthorization()
         syncToWidget()
     }
@@ -57,6 +64,15 @@ public class TaskManager: ObservableObject {
         tasks.contains { calendar.isDate($0.dueDate, inSameDayAs: date) }
     }
 
+    public func weekDays(for referenceDate: Date) -> [Date] {
+        guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: referenceDate) else {
+            return []
+        }
+        return (0..<7).compactMap { offset in
+            calendar.date(byAdding: .day, value: offset, to: weekInterval.start)
+        }
+    }
+
     // MARK: - Overdue Tasks (Прошлые невыполненные)
     public func overdueTasks() -> [TaskItem] {
         let startOfToday = calendar.startOfDay(for: Date())
@@ -69,7 +85,6 @@ public class TaskManager: ObservableObject {
         let startOfToday = calendar.startOfDay(for: now)
         for i in 0..<tasks.count {
             if !tasks[i].isCompleted && tasks[i].dueDate < startOfToday {
-                // Set to today, keeping time of task
                 let hour = calendar.component(.hour, from: tasks[i].dueDate)
                 let minute = calendar.component(.minute, from: tasks[i].dueDate)
                 if let newDate = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: now) {
@@ -83,7 +98,7 @@ public class TaskManager: ObservableObject {
         }
     }
 
-    // MARK: - Mutations
+    // MARK: - Task Mutations
     public func addTask(
         title: String,
         notes: String,
@@ -121,8 +136,6 @@ public class TaskManager: ObservableObject {
         let updated = tasks[index]
         if willBeCompleted {
             NotificationManager.shared.cancelNotification(for: updated)
-
-            // If recurring, schedule the next instance!
             if updated.recurrence != .none {
                 createNextRecurrence(for: updated)
             }
@@ -153,7 +166,6 @@ public class TaskManager: ObservableObject {
         }
 
         if let validNextDate = nextDate {
-            // Reset subtasks completion
             let resetSubtasks = task.subtasks.map { SubTask(id: UUID(), title: $0.title, isCompleted: false) }
             var nextReminder: Date? = nil
             if task.hasReminder, let oldReminder = task.reminderDate {
@@ -212,6 +224,34 @@ public class TaskManager: ObservableObject {
         }
     }
 
+    // MARK: - Exams & Olympiads Mutations
+    public func addExam(title: String, date: Date, categoryId: String, targetScore: String, notes: String) {
+        let newExam = ExamEvent(
+            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+            date: date,
+            categoryId: categoryId,
+            targetScore: targetScore.trimmingCharacters(in: .whitespacesAndNewlines),
+            notes: notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+        exams.append(newExam)
+    }
+
+    public func updateExam(_ exam: ExamEvent) {
+        if let index = exams.firstIndex(where: { $0.id == exam.id }) {
+            exams[index] = exam
+        }
+    }
+
+    public func deleteExam(_ exam: ExamEvent) {
+        exams.removeAll { $0.id == exam.id }
+    }
+
+    public var upcomingExams: [ExamEvent] {
+        let startOfToday = calendar.startOfDay(for: Date())
+        return exams.filter { $0.date >= startOfToday }
+            .sorted { $0.date < $1.date }
+    }
+
     // MARK: - Search
     public func searchTasks(query: String) -> [TaskItem] {
         let q = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
@@ -229,11 +269,9 @@ public class TaskManager: ObservableObject {
         var streak = 0
         var checkDate = calendar.startOfDay(for: Date())
 
-        // Check today first
         let todayTasks = tasks.filter { calendar.isDate($0.dueDate, inSameDayAs: checkDate) }
         let hasCompletedToday = todayTasks.contains { $0.isCompleted }
 
-        // If today has completed tasks, streak starts with today, otherwise check from yesterday
         if hasCompletedToday {
             streak += 1
             guard let yesterday = calendar.date(byAdding: .day, value: -1, to: checkDate) else { return streak }
@@ -243,7 +281,6 @@ public class TaskManager: ObservableObject {
             checkDate = yesterday
         }
 
-        // Loop backwards in days
         for _ in 0..<365 {
             let dayTasks = tasks.filter { calendar.isDate($0.dueDate, inSameDayAs: checkDate) }
             if dayTasks.contains(where: { $0.isCompleted }) {
@@ -311,18 +348,49 @@ public class TaskManager: ObservableObject {
             )
         }
 
-        if let encoded = try? JSONEncoder().encode(widgetItems) {
+        let widgetExams = upcomingExams.prefix(5).map {
+            WidgetExamItem(
+                id: $0.id.uuidString,
+                title: $0.title,
+                daysRemaining: $0.daysRemaining,
+                dateString: $0.formattedDate,
+                categoryId: $0.categoryId
+            )
+        }
+
+        // Encode tasks
+        if let tasksData = try? JSONEncoder().encode(widgetItems) {
             if let groupDefaults = UserDefaults(suiteName: widgetSuiteName) {
-                groupDefaults.set(encoded, forKey: widgetStorageKey)
+                groupDefaults.set(tasksData, forKey: widgetStorageKey)
                 groupDefaults.synchronize()
             }
-            UserDefaults.standard.set(encoded, forKey: widgetStorageKey)
+            UserDefaults.standard.set(tasksData, forKey: widgetStorageKey)
+
+            // Also write to shared file container if App Groups directory exists
+            if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: widgetSuiteName) {
+                let fileURL = containerURL.appendingPathComponent("widget_tasks.json")
+                try? tasksData.write(to: fileURL)
+            }
+        }
+
+        // Encode exams
+        if let examsData = try? JSONEncoder().encode(widgetExams) {
+            if let groupDefaults = UserDefaults(suiteName: widgetSuiteName) {
+                groupDefaults.set(examsData, forKey: widgetExamsStorageKey)
+                groupDefaults.synchronize()
+            }
+            UserDefaults.standard.set(examsData, forKey: widgetExamsStorageKey)
+
+            if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: widgetSuiteName) {
+                let fileURL = containerURL.appendingPathComponent("widget_exams.json")
+                try? examsData.write(to: fileURL)
+            }
         }
 
         WidgetCenter.shared.reloadAllTimelines()
     }
 
-    // MARK: - Persistence
+    // MARK: - Persistence (SAFE FOR UPDATES)
     private func saveTasks() {
         if let encoded = try? JSONEncoder().encode(tasks) {
             UserDefaults.standard.set(encoded, forKey: storageKey)
@@ -330,6 +398,7 @@ public class TaskManager: ObservableObject {
     }
 
     private func loadTasks() {
+        // ALWAYS keep user's existing tasks intact upon app update
         if let savedData = UserDefaults.standard.data(forKey: storageKey),
            let decoded = try? JSONDecoder().decode([TaskItem].self, from: savedData) {
             let validIds = Set(categories.map { $0.id })
@@ -340,7 +409,55 @@ public class TaskManager: ObservableObject {
                 }
                 return t
             }
+            return
         }
+
+        // ONLY on the very first install when nothing was saved yet
+        loadInitialSampleTasks()
+    }
+
+    private func saveExams() {
+        if let encoded = try? JSONEncoder().encode(exams) {
+            UserDefaults.standard.set(encoded, forKey: examsStorageKey)
+        }
+    }
+
+    private func loadExams() {
+        if let savedData = UserDefaults.standard.data(forKey: examsStorageKey),
+           let decoded = try? JSONDecoder().decode([ExamEvent].self, from: savedData) {
+            self.exams = decoded
+            return
+        }
+
+        // Default initial exams if empty
+        let currentYear = calendar.component(.year, from: Date())
+        var comp = DateComponents()
+        comp.year = currentYear
+        comp.month = 5
+        comp.day = 28
+        let examDate1 = calendar.date(from: comp) ?? Date().addingTimeInterval(86400 * 30)
+
+        comp.day = 31
+        let examDate2 = calendar.date(from: comp) ?? Date().addingTimeInterval(86400 * 33)
+
+        comp.month = 6
+        comp.day = 4
+        let examDate3 = calendar.date(from: comp) ?? Date().addingTimeInterval(86400 * 37)
+
+        comp.day = 8
+        let examDate4 = calendar.date(from: comp) ?? Date().addingTimeInterval(86400 * 41)
+
+        comp.month = 7
+        comp.day = 10
+        let examDate5 = calendar.date(from: comp) ?? Date().addingTimeInterval(86400 * 70)
+
+        exams = [
+            ExamEvent(title: "ЕГЭ Русский язык", date: examDate1, categoryId: "russian", targetScore: "90+"),
+            ExamEvent(title: "ЕГЭ Базовая математика", date: examDate2, categoryId: "math", targetScore: "5 (Отлично)"),
+            ExamEvent(title: "ЕГЭ Обществознание", date: examDate3, categoryId: "social", targetScore: "85+"),
+            ExamEvent(title: "ЕГЭ Литература", date: examDate4, categoryId: "literature", targetScore: "90+"),
+            ExamEvent(title: "ДВИ по Журналистике", date: examDate5, categoryId: "journalism", targetScore: "Максимум")
+        ]
     }
 
     private func loadInitialSampleTasks() {

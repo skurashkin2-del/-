@@ -9,6 +9,7 @@ public enum TaskFilter: String, CaseIterable, Identifiable {
 }
 
 public struct ContentView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var taskManager = TaskManager()
     @State private var selectedDate: Date = Date()
     @State private var filter: TaskFilter = .all
@@ -16,6 +17,8 @@ public struct ContentView: View {
     @State private var isShowingAddTask: Bool = false
     @State private var isShowingStats: Bool = false
     @State private var isShowingSearch: Bool = false
+    @State private var isShowingExams: Bool = false
+    @State private var isShowingWeeklyExport: Bool = false
     @State private var taskToEdit: TaskItem? = nil
 
     private let calendar = Calendar.current
@@ -218,11 +221,32 @@ public struct ContentView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {
-                        isShowingStats = true
-                    }) {
-                        Image(systemName: "chart.bar.xaxis")
-                            .font(.system(size: 16, weight: .semibold))
+                    HStack(spacing: 12) {
+                        Button(action: { isShowingExams = true }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "timer")
+                                    .font(.system(size: 15, weight: .semibold))
+                                if let nearest = taskManager.upcomingExams.first {
+                                    Text("\(nearest.daysRemaining) дн")
+                                        .font(.system(size: 11, weight: .bold))
+                                }
+                            }
+                            .foregroundColor(.orange)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.orange.opacity(0.12))
+                            .clipShape(Capsule())
+                        }
+
+                        Button(action: { isShowingStats = true }) {
+                            Image(systemName: "chart.bar.xaxis")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+
+                        Button(action: { isShowingWeeklyExport = true }) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
                     }
                 }
 
@@ -255,6 +279,17 @@ public struct ContentView: View {
             }
             .sheet(isPresented: $isShowingSearch) {
                 SearchView(taskManager: taskManager)
+            }
+            .sheet(isPresented: $isShowingExams) {
+                ExamsView(taskManager: taskManager)
+            }
+            .sheet(isPresented: $isShowingWeeklyExport) {
+                WeeklyExportView(taskManager: taskManager)
+            }
+            .onChange(of: scenePhase) { phase in
+                if phase == .active {
+                    taskManager.syncToWidget()
+                }
             }
         }
     }
