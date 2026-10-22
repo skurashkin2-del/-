@@ -366,10 +366,7 @@ public class TaskManager: ObservableObject {
             )
         }
 
-        let suites = [
-            "group.com.user.todolist",
-            "group.com.user.todolist.widget"
-        ]
+        let suites = discoverSuites()
 
         if let tasksData = try? JSONEncoder().encode(widgetItems),
            let examsData = try? JSONEncoder().encode(widgetExams) {
@@ -389,6 +386,43 @@ public class TaskManager: ObservableObject {
         }
 
         WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    private func discoverSuites() -> [String] {
+        var suites = [
+            "group.com.user.todolist",
+            "group.com.user.todolist.widget"
+        ]
+        if let bundleId = Bundle.main.bundleIdentifier {
+            suites.append("group.\(bundleId)")
+            let cleanId = bundleId.replacingOccurrences(of: ".widget", with: "")
+            suites.append("group.\(cleanId)")
+        }
+
+        if let path = Bundle.main.path(forResource: "embedded", ofType: "mobileprovision"),
+           let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
+           let content = String(data: data, encoding: .isoLatin1) {
+            if let range = content.range(of: "<key>com.apple.security.application-groups</key>") {
+                let sub = content[range.upperBound...]
+                if let endRange = sub.range(of: "</array>") {
+                    let arrayContent = String(sub[..<endRange.lowerBound])
+                    let pattern = "<string>(.*?)</string>"
+                    if let regex = try? NSRegularExpression(pattern: pattern) {
+                        let nsStr = arrayContent as NSString
+                        let matches = regex.matches(in: arrayContent, range: NSRange(location: 0, length: nsStr.length))
+                        for match in matches {
+                            if match.numberOfRanges > 1 {
+                                let groupName = nsStr.substring(with: match.range(at: 1))
+                                if !suites.contains(groupName) {
+                                    suites.insert(groupName, at: 0)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return suites
     }
 
     // MARK: - Persistence (SAFE FOR UPDATES)

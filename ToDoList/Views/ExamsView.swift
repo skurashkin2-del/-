@@ -50,32 +50,41 @@ public struct ExamsView: View {
                 } else {
                     List {
                         Section {
-                            VStack(alignment: .leading, spacing: 8) {
+                            VStack(alignment: .leading, spacing: 10) {
                                 HStack(spacing: 6) {
                                     Image(systemName: "hand.tap.fill")
                                         .foregroundColor(.orange)
-                                    Text("Настройка виджета на рабочем столе:")
-                                        .font(.system(size: 13, weight: .bold))
+                                    Text("Как настроить виджеты:")
+                                        .font(.system(size: 14, weight: .bold))
                                 }
-                                Text("Зажмите виджет на экране ➔ нажмите «Изменить виджет» ➔ выберите конкретный предмет или введите своё событие!")
+
+                                Text("• **Виджет отсчёта**: Зажмите виджет на экране ➔ «Изменить виджет» ➔ выберите предмет или задайте своё событие и дату!")
                                     .font(.system(size: 12))
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.primary)
+
+                                Text("• **Виджет задач**: Зажмите виджет на экране ➔ «Изменить виджет» ➔ выберите «Задать задачи вручную» или «Автосинхронизация».")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.primary)
 
                                 Button(action: {
                                     let generator = UINotificationFeedbackGenerator()
                                     generator.notificationOccurred(.success)
                                     taskManager.syncToWidget()
                                 }) {
-                                    HStack(spacing: 5) {
+                                    HStack(spacing: 6) {
                                         Image(systemName: "arrow.triangle.2.circlepath")
-                                        Text("Обновить виджеты сейчас")
+                                        Text("Принудительно обновить виджеты")
                                     }
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundColor(.accentColor)
-                                    .padding(.top, 2)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 8)
+                                    .background(Color.accentColor)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                    .padding(.top, 4)
                                 }
                             }
-                            .padding(.vertical, 6)
+                            .padding(.vertical, 4)
                         }
 
                         ForEach(sortedExams) { exam in

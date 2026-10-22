@@ -40,18 +40,54 @@ public struct DisplayExam {
     public var colorHex: String
 }
 
-// MARK: - App Storage Helper
+// MARK: - Dynamic Storage Helper (Inspects All App Groups and Provisioning Profile)
 enum WidgetStorage {
-    static let suiteNames = [
-        "group.com.user.todolist",
-        "group.com.user.todolist.widget"
-    ]
     static let tasksKey = "widget_today_tasks"
     static let examsKey = "widget_exams_list"
 
-    static func loadTasks() -> [WidgetTaskItem] {
+    static func discoverSuites() -> [String] {
+        var suites = [
+            "group.com.user.todolist",
+            "group.com.user.todolist.widget"
+        ]
+        if let bundleId = Bundle.main.bundleIdentifier {
+            suites.append("group.\(bundleId)")
+            let cleanId = bundleId.replacingOccurrences(of: ".widget", with: "")
+            suites.append("group.\(cleanId)")
+        }
+
+        // Dynamically parse embedded.mobileprovision for signer-injected App Groups
+        if let path = Bundle.main.path(forResource: "embedded", ofType: "mobileprovision"),
+           let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
+           let content = String(data: data, encoding: .isoLatin1) {
+            if let range = content.range(of: "<key>com.apple.security.application-groups</key>") {
+                let sub = content[range.upperBound...]
+                if let endRange = sub.range(of: "</array>") {
+                    let arrayContent = String(sub[..<endRange.lowerBound])
+                    let pattern = "<string>(.*?)</string>"
+                    if let regex = try? NSRegularExpression(pattern: pattern) {
+                        let nsStr = arrayContent as NSString
+                        let matches = regex.matches(in: arrayContent, range: NSRange(location: 0, length: nsStr.length))
+                        for match in matches {
+                            if match.numberOfRanges > 1 {
+                                let groupName = nsStr.substring(with: match.range(at: 1))
+                                if !suites.contains(groupName) {
+                                    suites.insert(groupName, at: 0)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return suites
+    }
+
+    static func loadTasks() -> [WidgetTaskItem]? {
+        let suites = discoverSuites()
+
         // 1. Try Shared Container Directory Files
-        for suite in suiteNames {
+        for suite in suites {
             if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: suite) {
                 let fileURL = containerURL.appendingPathComponent("widget_tasks.json")
                 if let fileData = try? Data(contentsOf: fileURL),
@@ -63,7 +99,7 @@ enum WidgetStorage {
         }
 
         // 2. Try App Group UserDefaults
-        for suite in suiteNames {
+        for suite in suites {
             if let groupDefaults = UserDefaults(suiteName: suite),
                let data = groupDefaults.data(forKey: tasksKey),
                let items = try? JSONDecoder().decode([WidgetTaskItem].self, from: data),
@@ -79,16 +115,13 @@ enum WidgetStorage {
             return items
         }
 
-        // Fallback default tasks
-        return [
-            WidgetTaskItem(id: "1", title: "Повторить орфоэпию (Русский)", isCompleted: false, priority: "Срочный"),
-            WidgetTaskItem(id: "2", title: "Решить вариант (Математика)", isCompleted: true, priority: "Обычный"),
-            WidgetTaskItem(id: "3", title: "Черновик заметки (Журналистика)", isCompleted: false, priority: "Обычный")
-        ]
+        return nil
     }
 
-    static func loadExams() -> [WidgetExamItem] {
-        for suite in suiteNames {
+    static func loadExams() -> [WidgetExamItem]? {
+        let suites = discoverSuites()
+
+        for suite in suites {
             if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: suite) {
                 let fileURL = containerURL.appendingPathComponent("widget_exams.json")
                 if let fileData = try? Data(contentsOf: fileURL),
@@ -99,7 +132,7 @@ enum WidgetStorage {
             }
         }
 
-        for suite in suiteNames {
+        for suite in suites {
             if let groupDefaults = UserDefaults(suiteName: suite),
                let data = groupDefaults.data(forKey: examsKey),
                let items = try? JSONDecoder().decode([WidgetExamItem].self, from: data),
@@ -114,11 +147,11 @@ enum WidgetStorage {
             return items
         }
 
-        return []
+        return nil
     }
 }
 
-// MARK: - App Intent for Configurable Exam Widget
+// MARK: - App Intent for Configurable Exam Countdown
 public enum ExamChoice: String, AppEnum {
     case nearest = "nearest"
     case russian = "russian"
@@ -126,36 +159,70 @@ public enum ExamChoice: String, AppEnum {
     case literature = "literature"
     case social = "social"
     case journalism = "journalism"
+    case custom = "custom"
 
     public static var typeDisplayRepresentation: TypeDisplayRepresentation = "Событие"
 
     public static var caseDisplayRepresentations: [ExamChoice: DisplayRepresentation] = [
-        .nearest: "Ближайший экзамен",
+        .nearest: "Ближайший экзамен из приложения",
         .russian: "ЕГЭ Русский язык",
         .math: "ЕГЭ Базовая математика",
         .literature: "ЕГЭ Литература",
         .social: "ЕГЭ Обществознание",
-        .journalism: "ДВИ по Журналистике"
+        .journalism: "ДВИ по Журналистике",
+        .custom: "Своё событие (ввести дату)"
     ]
 }
 
 public struct SelectExamIntent: WidgetConfigurationIntent {
     public static var title: LocalizedStringResource = "Настроить отсчёт"
-    public static var description = IntentDescription("Выберите экзамен или введите своё событие.")
+    public static var description = IntentDescription("Выберите экзамен или настройте своё событие.")
 
-    @Parameter(title: "Экзамен", default: .nearest)
+    @Parameter(title: "Экзамен / Событие", default: .nearest)
     public var selectedExam: ExamChoice
 
-    @Parameter(title: "Своё название (опционально)")
+    @Parameter(title: "Своё название (для своего события)")
     public var customTitle: String?
 
-    @Parameter(title: "Своя дата (ДД.ММ.ГГГГ, опционально)")
-    public var customDate: String?
+    @Parameter(title: "Своя дата (ДД.ММ.ГГГГ)")
+    public var customDateString: String?
 
     public init() {}
 }
 
-// MARK: - Exam Provider with AppIntent
+// MARK: - App Intent for Configurable Tasks Widget
+public enum TaskWidgetMode: String, AppEnum {
+    case autoSync = "autoSync"
+    case manual = "manual"
+
+    public static var typeDisplayRepresentation: TypeDisplayRepresentation = "Режим задач"
+
+    public static var caseDisplayRepresentations: [TaskWidgetMode: DisplayRepresentation] = [
+        .autoSync: "Автоматически из приложения",
+        .manual: "Задать задачи вручную"
+    ]
+}
+
+public struct SelectTasksIntent: WidgetConfigurationIntent {
+    public static var title: LocalizedStringResource = "Настройка списка задач"
+    public static var description = IntentDescription("Выберите режим: автосинхронизация или ручной ввод задач.")
+
+    @Parameter(title: "Режим", default: .autoSync)
+    public var mode: TaskWidgetMode
+
+    @Parameter(title: "Задача 1 (ручной режим)")
+    public var customTask1: String?
+
+    @Parameter(title: "Задача 2 (ручной режим)")
+    public var customTask2: String?
+
+    @Parameter(title: "Задача 3 (ручной режим)")
+    public var customTask3: String?
+
+    public init() {}
+}
+
+// MARK: - Exam Provider
 struct ExamEntry: TimelineEntry {
     let date: Date
     let exam: DisplayExam
@@ -166,7 +233,7 @@ struct ExamAppIntentProvider: AppIntentTimelineProvider {
     typealias Intent = SelectExamIntent
 
     func placeholder(in context: Context) -> ExamEntry {
-        ExamEntry(date: Date(), exam: resolveExam(configuration: SelectExamIntent()))
+        ExamEntry(date: Date(), exam: DisplayExam(title: "ЕГЭ Русский язык", daysRemaining: 34, dateString: "28 мая", colorHex: "#EF4444"))
     }
 
     func snapshot(for configuration: SelectExamIntent, in context: Context) async -> ExamEntry {
@@ -184,19 +251,19 @@ struct ExamAppIntentProvider: AppIntentTimelineProvider {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
 
-        // 1. If user entered custom event title and date
-        if let customTitle = configuration.customTitle?.trimmingCharacters(in: .whitespacesAndNewlines), !customTitle.isEmpty {
-            let targetDate = parseDate(configuration.customDate) ?? Date().addingTimeInterval(86400 * 30)
+        // 1. If user chose custom event or entered custom title/date
+        if configuration.selectedExam == .custom || (configuration.customTitle != nil && !configuration.customTitle!.isEmpty) {
+            let title = (configuration.customTitle?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false) ? configuration.customTitle! : "Мой экзамен"
+            let targetDate = parseDate(configuration.customDateString) ?? calendar.date(byAdding: .day, value: 30, to: today)!
             let diff = calendar.dateComponents([.day], from: today, to: calendar.startOfDay(for: targetDate)).day ?? 0
-            let dateStr = formatDate(targetDate)
-            return DisplayExam(title: customTitle, daysRemaining: diff, dateString: dateStr, colorHex: "#F59E0B")
+            return DisplayExam(title: title, daysRemaining: max(0, diff), dateString: formatDate(targetDate), colorHex: "#F59E0B")
         }
 
-        // 2. Try synced exams from app
-        let synced = WidgetStorage.loadExams()
+        // 2. Try reading synced exams from the app
+        let syncedExams = WidgetStorage.loadExams() ?? []
 
         func findSynced(categoryId: String) -> DisplayExam? {
-            if let match = synced.first(where: { $0.categoryId == categoryId }) {
+            if let match = syncedExams.first(where: { $0.categoryId == categoryId }) {
                 return DisplayExam(title: match.title, daysRemaining: match.daysRemaining, dateString: match.dateString, colorHex: colorHex(for: categoryId))
             }
             return nil
@@ -204,7 +271,7 @@ struct ExamAppIntentProvider: AppIntentTimelineProvider {
 
         switch configuration.selectedExam {
         case .nearest:
-            if let first = synced.first {
+            if let first = syncedExams.first {
                 return DisplayExam(title: first.title, daysRemaining: first.daysRemaining, dateString: first.dateString, colorHex: colorHex(for: first.categoryId))
             }
             return fallbackExam(choice: .russian, today: today)
@@ -218,13 +285,14 @@ struct ExamAppIntentProvider: AppIntentTimelineProvider {
             return findSynced(categoryId: "social") ?? fallbackExam(choice: .social, today: today)
         case .journalism:
             return findSynced(categoryId: "journalism") ?? fallbackExam(choice: .journalism, today: today)
+        case .custom:
+            return fallbackExam(choice: .russian, today: today)
         }
     }
 
     private func fallbackExam(choice: ExamChoice, today: Date) -> DisplayExam {
         let calendar = Calendar.current
         let year = calendar.component(.year, from: today)
-
         var comp = DateComponents()
         comp.year = year
 
@@ -252,6 +320,10 @@ struct ExamAppIntentProvider: AppIntentTimelineProvider {
             title = "ДВИ Журналистика"
             comp.month = 7; comp.day = 10
             color = "#F59E0B"
+        case .custom:
+            title = "Экзамен"
+            comp.month = 6; comp.day = 15
+            color = "#F59E0B"
         }
 
         var target = calendar.date(from: comp) ?? today.addingTimeInterval(86400 * 30)
@@ -261,18 +333,17 @@ struct ExamAppIntentProvider: AppIntentTimelineProvider {
         }
 
         let diff = calendar.dateComponents([.day], from: today, to: calendar.startOfDay(for: target)).day ?? 0
-        return DisplayExam(title: title, daysRemaining: diff, dateString: formatDate(target), colorHex: color)
+        return DisplayExam(title: title, daysRemaining: max(0, diff), dateString: formatDate(target), colorHex: color)
     }
 
     private func parseDate(_ string: String?) -> Date? {
         guard let s = string?.trimmingCharacters(in: .whitespacesAndNewlines), !s.isEmpty else { return nil }
         let formatter = DateFormatter()
-        formatter.dateFormat = "dd.MM.yyyy"
-        if let d = formatter.date(from: s) { return d }
-        formatter.dateFormat = "dd/MM/yyyy"
-        if let d = formatter.date(from: s) { return d }
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.date(from: s)
+        for format in ["dd.MM.yyyy", "dd/MM/yyyy", "dd.MM.yy", "dd.MM", "yyyy-MM-dd"] {
+            formatter.dateFormat = format
+            if let d = formatter.date(from: s) { return d }
+        }
+        return nil
     }
 
     private func formatDate(_ date: Date) -> String {
@@ -294,25 +365,70 @@ struct ExamAppIntentProvider: AppIntentTimelineProvider {
     }
 }
 
-// MARK: - Task Timeline Provider
+// MARK: - Task Timeline Provider (with AppIntent configuration!)
 struct TaskEntry: TimelineEntry {
     let date: Date
     let tasks: [WidgetTaskItem]
+    let isConnected: Bool
 }
 
-struct TaskProvider: TimelineProvider {
+struct TaskAppIntentProvider: AppIntentTimelineProvider {
+    typealias Entry = TaskEntry
+    typealias Intent = SelectTasksIntent
+
     func placeholder(in context: Context) -> TaskEntry {
-        TaskEntry(date: Date(), tasks: WidgetStorage.loadTasks())
+        TaskEntry(
+            date: Date(),
+            tasks: [
+                WidgetTaskItem(id: "1", title: "Задачи из приложения", isCompleted: false, priority: "Обычный")
+            ],
+            isConnected: true
+        )
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (TaskEntry) -> ()) {
-        completion(TaskEntry(date: Date(), tasks: WidgetStorage.loadTasks()))
+    func snapshot(for configuration: SelectTasksIntent, in context: Context) async -> TaskEntry {
+        resolveEntry(configuration: configuration)
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<TaskEntry>) -> ()) {
-        let entry = TaskEntry(date: Date(), tasks: WidgetStorage.loadTasks())
+    func timeline(for configuration: SelectTasksIntent, in context: Context) async -> Timeline<TaskEntry> {
+        let entry = resolveEntry(configuration: configuration)
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date()
-        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+        return Timeline(entries: [entry], policy: .after(nextUpdate))
+    }
+
+    private func resolveEntry(configuration: SelectTasksIntent) -> TaskEntry {
+        // 1. Manual Mode
+        if configuration.mode == .manual {
+            var items: [WidgetTaskItem] = []
+            if let t1 = configuration.customTask1?.trimmingCharacters(in: .whitespacesAndNewlines), !t1.isEmpty {
+                items.append(WidgetTaskItem(id: "m1", title: t1, isCompleted: false, priority: "Обычный"))
+            }
+            if let t2 = configuration.customTask2?.trimmingCharacters(in: .whitespacesAndNewlines), !t2.isEmpty {
+                items.append(WidgetTaskItem(id: "m2", title: t2, isCompleted: false, priority: "Обычный"))
+            }
+            if let t3 = configuration.customTask3?.trimmingCharacters(in: .whitespacesAndNewlines), !t3.isEmpty {
+                items.append(WidgetTaskItem(id: "m3", title: t3, isCompleted: false, priority: "Обычный"))
+            }
+            if items.isEmpty {
+                items.append(WidgetTaskItem(id: "m0", title: "Зажмите виджет ➔ настройте задачи", isCompleted: false, priority: "Обычный"))
+            }
+            return TaskEntry(date: Date(), tasks: items, isConnected: true)
+        }
+
+        // 2. Auto Sync Mode from App
+        if let synced = WidgetStorage.loadTasks(), !synced.isEmpty {
+            return TaskEntry(date: Date(), tasks: synced, isConnected: true)
+        }
+
+        // 3. Fallback when App Groups is blocked by developer certificate
+        return TaskEntry(
+            date: Date(),
+            tasks: [
+                WidgetTaskItem(id: "f1", title: "Откройте приложение для синхронизации", isCompleted: false, priority: "Срочный"),
+                WidgetTaskItem(id: "f2", title: "Или зажмите виджет ➔ ручной ввод", isCompleted: false, priority: "Обычный")
+            ],
+            isConnected: false
+        )
     }
 }
 
@@ -329,17 +445,18 @@ struct ToggleTaskIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult {
-        var items = WidgetStorage.loadTasks()
-        if let idx = items.firstIndex(where: { $0.id == taskId }) {
-            items[idx].isCompleted.toggle()
-            if let data = try? JSONEncoder().encode(items) {
-                for suite in WidgetStorage.suiteNames {
-                    UserDefaults(suiteName: suite)?.set(data, forKey: WidgetStorage.tasksKey)
-                    if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: suite) {
-                        try? data.write(to: containerURL.appendingPathComponent("widget_tasks.json"))
+        if var items = WidgetStorage.loadTasks() {
+            if let idx = items.firstIndex(where: { $0.id == taskId }) {
+                items[idx].isCompleted.toggle()
+                if let data = try? JSONEncoder().encode(items) {
+                    for suite in WidgetStorage.discoverSuites() {
+                        UserDefaults(suiteName: suite)?.set(data, forKey: WidgetStorage.tasksKey)
+                        if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: suite) {
+                            try? data.write(to: containerURL.appendingPathComponent("widget_tasks.json"))
+                        }
                     }
+                    UserDefaults.standard.set(data, forKey: WidgetStorage.tasksKey)
                 }
-                UserDefaults.standard.set(data, forKey: WidgetStorage.tasksKey)
             }
         }
         return .result()
@@ -368,7 +485,7 @@ struct TaskCheckboxCircle: View {
 }
 
 struct ToDoListWidgetEntryView: View {
-    var entry: TaskProvider.Entry
+    var entry: TaskAppIntentProvider.Entry
     @Environment(\.widgetFamily) var family
 
     private var pendingCount: Int {
@@ -404,10 +521,10 @@ struct ToDoListWidgetEntryView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "checklist")
                         .font(.system(size: 11, weight: .bold))
-                    Text("План на сегодня")
+                    Text("План")
                         .font(.system(size: 11, weight: .bold))
                     Spacer()
-                    Text("\(pendingCount)")
+                    Text("\(pendingCount) ост.")
                         .font(.system(size: 11, weight: .bold))
                 }
 
@@ -538,7 +655,7 @@ struct ToDoListWidgetEntryView: View {
     }
 }
 
-// MARK: - Views for Configurable Exam Widget
+// MARK: - Views for Exam Widget
 struct ExamWidgetEntryView: View {
     var entry: ExamAppIntentProvider.Entry
     @Environment(\.widgetFamily) var family
@@ -680,11 +797,15 @@ struct ToDoListWidget: Widget {
     let kind: String = "ToDoListWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: TaskProvider()) { entry in
+        AppIntentConfiguration(
+            kind: kind,
+            intent: SelectTasksIntent.self,
+            provider: TaskAppIntentProvider()
+        ) { entry in
             ToDoListWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("Задачи на сегодня")
-        .description("Список дел и невыполненных задач на рабочий стол и экран блокировки.")
+        .configurationDisplayName("Задачи на день")
+        .description("Список дел: автосинхронизация с приложением или настраиваемый ручной ввод.")
         .supportedFamilies([
             .systemSmall,
             .systemMedium,
