@@ -224,6 +224,23 @@ public class TaskManager: ObservableObject {
         }
     }
 
+    // MARK: - Quick Fill: Recent Titles per Category
+    public func recentTitles(for categoryId: String, limit: Int = 4) -> [String] {
+        let filtered = tasks
+            .filter { $0.categoryId == categoryId }
+            .sorted { $0.createdAt > $1.createdAt }
+        var seen = Set<String>()
+        var result: [String] = []
+        for task in filtered {
+            let t = task.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !t.isEmpty, !seen.contains(t) else { continue }
+            seen.insert(t)
+            result.append(t)
+            if result.count >= limit { break }
+        }
+        return result
+    }
+
     // MARK: - Exams & Olympiads Mutations
     public func addExam(title: String, date: Date, categoryId: String, targetScore: String, notes: String) {
         let newExam = ExamEvent(
