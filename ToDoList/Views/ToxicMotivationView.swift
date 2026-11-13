@@ -90,11 +90,11 @@ public struct ToxicMotivationView: View {
         self.taskCount = taskCount
         self.onAddTask = onAddTask
         self.onDismiss = onDismiss
-        _currentIndex = State(initialValue: Int.random(in: 0..<Self.quotes.count))
+        _currentIndex = State(initialValue: Int.random(in: 0..<ToxicMotivationView.quotes.count))
     }
 
     private var currentQuote: ToxicQuote {
-        Self.quotes[currentIndex % Self.quotes.count]
+        ToxicMotivationView.quotes[currentIndex % ToxicMotivationView.quotes.count]
     }
 
     public var body: some View {
@@ -185,7 +185,7 @@ public struct ToxicMotivationView: View {
                                             endPoint: .trailing
                                         )
                                     )
-                                    .frame(width: max(12, geo.size.width * CGFloat(min(taskCount, 3)) / 3.0), height: 10)
+                                    .frame(width: max(CGFloat(12), geo.size.width * CGFloat(min(taskCount, 3)) / 3.0), height: 10)
                             }
                         }
                         .frame(height: 10)
@@ -271,13 +271,13 @@ public struct ToxicMotivationView: View {
                             let impact = UIImpactFeedbackGenerator(style: .heavy)
                             impact.impactOccurred()
                             withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                                currentIndex = (currentIndex + 1) % Self.quotes.count
+                                currentIndex = (currentIndex + 1) % ToxicMotivationView.quotes.count
                             }
                         }) {
                             HStack(spacing: 6) {
                                 Image(systemName: "arrow.triangle.2.circlepath")
                                     .font(.system(size: 13, weight: .bold))
-                                Text("💀 Другой мем / пинок (\(currentIndex + 1)/\(Self.quotes.count))")
+                                Text("💀 Другой мем / пинок (\(currentIndex + 1)/\(ToxicMotivationView.quotes.count))")
                                     .font(.system(size: 14, weight: .bold))
                             }
                             .foregroundColor(.white.opacity(0.85))

@@ -152,7 +152,7 @@ public class NotificationManager {
                     let content = UNMutableNotificationContent()
                     content.title = slot.phrase.title
                     content.body = "\(slot.phrase.body) (Осталось дел: \(todayPending.count))"
-                    content.sound = .defaultCriticalSound(withAudioVolume: 1.0)
+                    content.sound = .default
                     content.badge = NSNumber(value: todayPending.count)
 
                     let triggerComp = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: triggerDate)
