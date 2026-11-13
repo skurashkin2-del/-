@@ -7,6 +7,7 @@ public class TaskManager: ObservableObject {
         didSet {
             saveTasks()
             syncToWidget()
+            NotificationManager.shared.scheduleToxicEveningNotifications(tasks: tasks)
         }
     }
 
@@ -31,6 +32,7 @@ public class TaskManager: ObservableObject {
         loadExams()
         NotificationManager.shared.requestAuthorization()
         syncToWidget()
+        NotificationManager.shared.scheduleToxicEveningNotifications(tasks: tasks)
     }
 
     // MARK: - Filter by Date and Category

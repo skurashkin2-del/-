@@ -19,6 +19,7 @@ public struct ContentView: View {
     @State private var isShowingSearch: Bool = false
     @State private var isShowingExams: Bool = false
     @State private var isShowingWeeklyExport: Bool = false
+    @State private var isShowingToxicPopup: Bool = false
     @State private var taskToEdit: TaskItem? = nil
 
     private let calendar = Calendar.current
@@ -71,6 +72,11 @@ public struct ContentView: View {
                     // Overdue Rollover Banner
                     if !overdueTasksList.isEmpty {
                         overdueBannerView
+                    }
+
+                    // Toxic Motivation Warning Banner (< 3 tasks on selected day)
+                    if totalCount < 3 {
+                        toxicWarningBannerView
                     }
 
                     // Week Calendar Strip
@@ -247,6 +253,24 @@ public struct ContentView: View {
                             Image(systemName: "square.and.arrow.up")
                                 .font(.system(size: 14, weight: .semibold))
                         }
+
+                        Button(action: {
+                            let generator = UINotificationFeedbackGenerator()
+                            generator.notificationOccurred(.warning)
+                            isShowingToxicPopup = true
+                        }) {
+                            HStack(spacing: 3) {
+                                Text("💀")
+                                    .font(.system(size: 13))
+                                Text("Пнуть")
+                                    .font(.system(size: 11, weight: .bold))
+                            }
+                            .foregroundColor(.red)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 4)
+                            .background(Color.red.opacity(0.12))
+                            .clipShape(Capsule())
+                        }
                     }
                 }
 
@@ -286,10 +310,28 @@ public struct ContentView: View {
             .sheet(isPresented: $isShowingWeeklyExport) {
                 WeeklyExportView(taskManager: taskManager)
             }
+            .fullScreenCover(isPresented: $isShowingToxicPopup) {
+                ToxicMotivationView(
+                    taskCount: taskManager.totalTasksCount(for: calendar.isDateInToday(selectedDate) ? selectedDate : Date()),
+                    onAddTask: {
+                        isShowingToxicPopup = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            isShowingAddTask = true
+                        }
+                    },
+                    onDismiss: {
+                        isShowingToxicPopup = false
+                    }
+                )
+            }
             .onChange(of: scenePhase) { phase in
                 if phase == .active {
                     taskManager.syncToWidget()
+                    checkToxicCondition()
                 }
+            }
+            .onAppear {
+                checkToxicCondition()
             }
         }
     }
@@ -325,6 +367,68 @@ public struct ContentView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .background(Color.orange.opacity(0.12))
+    }
+
+    private var toxicWarningBannerView: some View {
+        Button(action: {
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.warning)
+            isShowingToxicPopup = true
+        }) {
+            HStack(spacing: 8) {
+                Text("💀")
+                    .font(.system(size: 16))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Text("ТОКСИЧНЫЙ РЕЖИМ:")
+                            .font(.system(size: 11, weight: .black))
+                            .foregroundColor(.red)
+                        Text("Меньше 3 задач на день!")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.primary)
+                    }
+                    Text("С такими темпами ты ничего в этой жизни не добьёшься...")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer()
+
+                HStack(spacing: 4) {
+                    Text("Пнуть")
+                        .font(.system(size: 11, weight: .bold))
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 9, weight: .bold))
+                }
+                .foregroundColor(.red)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.red.opacity(0.12))
+                .clipShape(Capsule())
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+            .background(Color.red.opacity(0.08))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func checkToxicCondition() {
+        let todayCount = taskManager.totalTasksCount(for: Date())
+        if todayCount < 3 {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            let todayKey = formatter.string(from: Date())
+            let lastShown = UserDefaults.standard.string(forKey: "LastToxicPopupDate")
+            if lastShown != todayKey {
+                UserDefaults.standard.set(todayKey, forKey: "LastToxicPopupDate")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    isShowingToxicPopup = true
+                }
+            }
+        }
     }
 
     private var categorySelectorView: some View {
