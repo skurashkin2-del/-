@@ -9,6 +9,8 @@ jobs:
   build:
     name: Build Unsigned IPA
     runs-on: macos-15
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -64,3 +66,12 @@ jobs:
           name: ToDoList-IPA
           path: ToDoList.ipa
           retention-days: 14
+
+      - name: Publish to GitHub Releases (Direct Download)
+        uses: softprops/action-gh-release@v2
+        if: success()
+        with:
+          tag_name: latest
+          name: "Мой План (Latest IPA)"
+          body: "Прямая ссылка на скачивание актуального .ipa файла приложения. Не требует входа в GitHub!"
+          files: ToDoList.ipa
