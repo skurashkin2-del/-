@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     name: Build Unsigned IPA
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Checkout repository
@@ -16,7 +16,8 @@ jobs:
 
       - name: Select Xcode Version
         run: |
-          sudo xcode-select -s /Applications/Xcode_15.4.app 2>/dev/null \
+          sudo xcode-select -s /Applications/Xcode_16.2.app 2>/dev/null \
+            || sudo xcode-select -s /Applications/Xcode_16.1.app 2>/dev/null \
             || sudo xcode-select -s /Applications/Xcode_16.0.app 2>/dev/null \
             || sudo xcode-select -s /Applications/Xcode.app
           xcodebuild -version
