@@ -84,7 +84,7 @@ public struct AddTaskView: View {
                             .tag(cat.id)
                         }
                     }
-                    .onChange(of: categoryId) { _ in
+                    .onChange(of: categoryId) {
                         // При смене предмета показываем подсказки снова
                         showQuickFill = true
                     }
@@ -150,10 +150,10 @@ public struct AddTaskView: View {
                             }
                         }
                     }
-                    .onChange(of: weeklyRepeat) { enabled in
-                        recurrence = enabled ? .weekly : .none
+                    .onChange(of: weeklyRepeat) {
+                        recurrence = weeklyRepeat ? .weekly : .none
                     }
-                    .onChange(of: dueDate) { _ in
+                    .onChange(of: dueDate) {
                         // Когда тумблер включён, recurrence всегда остаётся weekly
                         if weeklyRepeat { recurrence = .weekly }
                     }
@@ -168,8 +168,8 @@ public struct AddTaskView: View {
                             Text("Уведомить в срок")
                         }
                     }
-                    .onChange(of: hasReminder) { enabled in
-                        if enabled {
+                    .onChange(of: hasReminder) {
+                        if hasReminder {
                             NotificationManager.shared.requestAuthorization()
                             if reminderDate < Date() { reminderDate = dueDate }
                         }

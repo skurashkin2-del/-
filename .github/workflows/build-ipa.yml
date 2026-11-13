@@ -33,8 +33,12 @@ jobs:
             archive \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_INJECT_BASE_ENTITLEMENTS=NO 2>&1 | tee xcodebuild.log
+            CODE_SIGN_IDENTITY="" 2>&1 | tee xcodebuild.log || {
+              echo "::error::Xcodebuild failed"
+              echo "=== RECENT ERRORS IN LOG ==="
+              grep -C 3 -i -E "error:|fatal:" xcodebuild.log || tail -n 60 xcodebuild.log
+              exit 1
+            }
 
       - name: Upload Build Log on Failure
         if: failure()

@@ -324,8 +324,8 @@ public struct ContentView: View {
                     }
                 )
             }
-            .onChange(of: scenePhase) { phase in
-                if phase == .active {
+            .onChange(of: scenePhase) {
+                if scenePhase == .active {
                     taskManager.syncToWidget()
                     checkToxicCondition()
                 }
