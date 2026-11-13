@@ -16,10 +16,8 @@ jobs:
 
       - name: Select Xcode Version
         run: |
-          sudo xcode-select -s /Applications/Xcode_16.2.app 2>/dev/null \
-            || sudo xcode-select -s /Applications/Xcode_16.1.app 2>/dev/null \
-            || sudo xcode-select -s /Applications/Xcode_16.0.app 2>/dev/null \
-            || sudo xcode-select -s /Applications/Xcode.app
+          ls -ld /Applications/Xcode* || true
+          sudo xcode-select -s /Applications/Xcode.app
           xcodebuild -version
 
       - name: Build Archive
@@ -29,6 +27,7 @@ jobs:
             -scheme ToDoList \
             -configuration Release \
             -sdk iphoneos \
+            -destination "generic/platform=iOS" \
             -archivePath build/ToDoList.xcarchive \
             archive \
             CODE_SIGNING_ALLOWED=NO \
