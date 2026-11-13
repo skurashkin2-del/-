@@ -33,10 +33,14 @@ jobs:
             archive \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" 2>&1 | tee xcodebuild.log || {
-              echo "::error::Xcodebuild failed"
-              echo "=== RECENT ERRORS IN LOG ==="
-              grep -C 3 -i -E "error:|fatal:" xcodebuild.log || tail -n 60 xcodebuild.log
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_STYLE=Manual 2>&1 | tee xcodebuild.log || {
+              grep -i -E "error:" xcodebuild.log | head -n 20 | while IFS= read -r line; do
+                echo "::error::$line"
+              done
+              tail -n 40 xcodebuild.log | while IFS= read -r line; do
+                echo "::error::$line"
+              done
               exit 1
             }
 
