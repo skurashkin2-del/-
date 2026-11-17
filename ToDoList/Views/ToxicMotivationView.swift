@@ -8,7 +8,6 @@ public struct ToxicQuote: Identifiable {
     public let message: String
     public let brutalQuote: String
     public let advice: String
-    public let imageName: String?
 }
 
 public struct ToxicMotivationView: View {
@@ -24,65 +23,58 @@ public struct ToxicMotivationView: View {
         ToxicQuote(
             emoji: "💀",
             title: "С ТАКИМИ ТЕМПАМИ ТЫ НИЧЕГО НЕ ДОБЬЁШЬСЯ",
-            subtitle: "«Ещё чуть-чуть и я точно что-то сделаю...»",
-            message: "Ты зашёл в планер ради одной задачки? Бюджетные места в топовых вузах прямо сейчас забирают те, кто ботал без перерыва. А ты запланировал полторы калеки-задачи и думаешь, что день удался? Быстро добавляй дела!",
+            subtitle: "Меньше 3 задач на день?!",
+            message: "Ты зашёл в планер ради одной-двух задачек? Бюджетные места в топовых вузах прямо сейчас забирают те, кто ботал без перерыва. А ты запланировал полторы калеки-задачи и думаешь, что день удался? Быстро добавляй дела!",
             brutalQuote: "«Мама, я не поступил, потому что мне было лень поставить 3 задачи в планер»",
-            advice: "Быстро накинь минимум 3 задачи: теорию, практику и тест!",
-            imageName: "meme_sun"
+            advice: "Быстро накинь минимум 3 задачи: теорию, практику и тест!"
         ),
         ToxicQuote(
-            emoji: "🐹",
+            emoji: "🤡",
             title: "ГРАФИК МИЛЛИОНЕРА НА ПЕНСИИ?",
-            subtitle: "LET'S GET THIS DEGREE...",
-            message: "Посмотри на свой список задач. Тебе самому не стыдно? Твой хомяк уже в шоке. Конкуренты прорешали вариант ЕГЭ и выучили блок терминов, пока ты лежишь в направлении диплома.",
+            subtitle: "Ты отдыхать пришёл или поступать?",
+            message: "Посмотри на свой список задач. Тебе самому не стыдно? Конкуренты уже прорешали вариант ЕГЭ и выучили блок терминов, пока ты лежишь в направлении диплома.",
             brutalQuote: "«Зато я сохранил ментальное здоровье» — скажут те, кто пойдёт учиться платно за миллион в год.",
-            advice: "Хватит жалеть себя. Нагрузи мозг реальными делами!",
-            imageName: "meme_hamster"
+            advice: "Хватит жалеть себя. Нагрузи мозг реальными делами!"
         ),
         ToxicQuote(
-            emoji: "😭",
+            emoji: "📉",
             title: "ПЛАН НА ДЕНЬ: ДЕГРАДАЦИЯ",
-            subtitle: "STU(DYING) ВО ВСЕЙ КРАСЕ",
-            message: "Экзаменаторам на ЕГЭ будет глубоко плевать на твои слёзы и «не было настроения». Напомнить средний проходной балл на бюджет? Добавляй русский, математику или обществознание прямо сейчас!",
+            subtitle: "Слишком лёгкий денёк получается",
+            message: "Экзаменаторам на ЕГЭ будет глубоко плевать на твои отмазки и «не было настроения». Напомнить средний проходной балл на бюджет? Добавляй русский, математику или обществознание прямо сейчас!",
             brutalQuote: "Дворники тоже нужны стране. Но ты вроде целился намного выше?",
-            advice: "Поставь минимум 3 полноценных дела на сегодня.",
-            imageName: "meme_studying"
+            advice: "Поставь минимум 3 полноценных дела на сегодня."
         ),
         ToxicQuote(
             emoji: "⏰",
-            title: "04:31 — НАДЕЕШЬСЯ НА ЧУДО?",
-            subtitle: "«УСПЕЮ» В ПОСЛЕДНЮЮ НОЧЬ?",
-            message: "Если планировать по одной задаче в день, ты тоже будешь сидеть в 04:31 утра в слезах перед экзаменом с мыслью «УСПЕЮ». Спойлер: не успеешь. Распредели нагрузку прямо сейчас!",
+            title: "НАДЕЕШЬСЯ НА ЧУДО В ПОСЛЕДНЮЮ НОЧЬ?",
+            subtitle: "«УСПЕЮ» В 04:30 УТРА ПЕРЕД ЭКЗАМЕНОМ?",
+            message: "Если планировать по одной задаче в день, ты будешь сидеть в слезах перед экзаменом с мыслью «я всё успею за ночь». Спойлер: не успеешь. Распредели нагрузку прямо сейчас!",
             brutalQuote: "Каждая недописанная задача сегодня — это бессонная ночь и паника перед экзаменом.",
-            advice: "Добавь задачи заранее, не доводи до ночного ада.",
-            imageName: "meme_0431"
+            advice: "Добавь задачи заранее, не доводи до ночного ада."
         ),
         ToxicQuote(
-            emoji: "🍺",
+            emoji: "🔥",
             title: "САМООБМАН ГОДА",
-            subtitle: "«НЕ СЕЙЧАС, Я ПЫТАЮСЬ УЧИТЬСЯ»",
+            subtitle: "Поставил 1 задачу и расслабился?",
             message: "Ты думаешь, что если зашёл в приложение и поставил одну галочку, ты заслужил отдых? Это иллюзия продуктивности. Нужно реально пахать, а не делать вид для галочки!",
             brutalQuote: "«Я начну нормально готовиться с понедельника» — главная ложь человечества.",
-            advice: "Сначала закрой минимум 3 задачи, потом будешь чиллить!",
-            imageName: "meme_beer"
+            advice: "Сначала закрой минимум 3 задачи, потом будешь чиллить!"
         ),
         ToxicQuote(
-            emoji: "📖",
+            emoji: "⚡",
             title: "ПОЩЁЧИНА РЕАЛЬНОСТИ",
-            subtitle: "IT'S NOT HARD, IT'S JUST NEW",
+            subtitle: "Время уходит безвозвратно",
             message: "Тебе кажется, что программа сложная? Нет, тебе просто лень сесть и разобраться. Каждый пустой день отдаляет тебя от профессии мечты. Встань и начни ботать!",
             brutalQuote: "Удача улыбается подготовленным, а лентяев она безжалостно топит.",
-            advice: "Подними планку: минимум 3 задачи каждый день!",
-            imageName: "meme_not_hard"
+            advice: "Подними планку: минимум 3 задачи каждый день!"
         ),
         ToxicQuote(
-            emoji: "🌲",
-            title: "ПОСТОВ НЕ БУДЕТ",
-            subtitle: "Всё-таки пришлось начать учиться",
-            message: "Отложи соцсети, закрой рилсы и тиктоки. Твоя лента подождёт, а дедлайн экзаменов — нет. Заполни планер 3 нормальными задачами и иди ботать!",
+            emoji: "🤦‍♂️",
+            title: "ОТЛОЖИ СОЦСЕТИ",
+            subtitle: "Всё-таки придётся начать учиться",
+            message: "Закрой рилсы, тиктоки и сериалы. Твоя лента подождёт, а дедлайн экзаменов — нет. Заполни планер 3 нормальными задачами и иди ботать!",
             brutalQuote: "«Я просто перегорел» — оправдание номер один в списке провалившихся.",
-            advice: "Выйди из соцсетей и наполни планер задачами!",
-            imageName: "meme_forest"
+            advice: "Выйди из соцсетей и наполни планер задачами!"
         )
     ]
 
@@ -108,7 +100,7 @@ public struct ToxicMotivationView: View {
             .ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: 18) {
                     // Header tag
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill")
@@ -124,10 +116,17 @@ public struct ToxicMotivationView: View {
                     .background(Color.yellow.opacity(0.15))
                     .clipShape(Capsule())
                     .overlay(Capsule().stroke(Color.yellow.opacity(0.4), lineWidth: 1))
-                    .padding(.top, 20)
+                    .padding(.top, 24)
+
+                    // Big Pulsing Emoji
+                    Text(currentQuote.emoji)
+                        .font(.system(size: 68))
+                        .scaleEffect(isPulsing ? 1.08 : 0.95)
+                        .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: isPulsing)
+                        .padding(.top, 4)
 
                     // Savage Title
-                    VStack(spacing: 4) {
+                    VStack(spacing: 6) {
                         Text(currentQuote.title)
                             .font(.system(size: 21, weight: .black, design: .rounded))
                             .foregroundColor(.white)
@@ -137,26 +136,6 @@ public struct ToxicMotivationView: View {
                         Text(currentQuote.subtitle)
                             .font(.system(size: 14, weight: .bold))
                             .foregroundColor(.red)
-                    }
-
-                    // Meme Image (if available)
-                    if let imgName = currentQuote.imageName {
-                        Image(imgName)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxHeight: 200)
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.red.opacity(0.5), lineWidth: 1.5)
-                            )
-                            .shadow(color: Color.black.opacity(0.6), radius: 8, x: 0, y: 4)
-                            .padding(.horizontal, 24)
-                    } else {
-                        Text(currentQuote.emoji)
-                            .font(.system(size: 64))
-                            .scaleEffect(isPulsing ? 1.08 : 0.96)
-                            .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: isPulsing)
                     }
 
                     // Progress Tracker Card (x / 3 tasks)
@@ -200,9 +179,9 @@ public struct ToxicMotivationView: View {
                     .padding(.horizontal, 20)
 
                     // Savage Message Card
-                    VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 12) {
                         Text(currentQuote.message)
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.system(size: 15, weight: .medium))
                             .foregroundColor(.white.opacity(0.92))
                             .lineSpacing(3)
 
@@ -266,7 +245,7 @@ public struct ToxicMotivationView: View {
                             .shadow(color: Color.red.opacity(0.4), radius: 8, x: 0, y: 4)
                         }
 
-                        // Switch to another savage roast / meme
+                        // Switch to another savage roast
                         Button(action: {
                             let impact = UIImpactFeedbackGenerator(style: .heavy)
                             impact.impactOccurred()
@@ -277,7 +256,7 @@ public struct ToxicMotivationView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "arrow.triangle.2.circlepath")
                                     .font(.system(size: 13, weight: .bold))
-                                Text("💀 Другой мем / пинок (\(currentIndex + 1)/\(ToxicMotivationView.quotes.count))")
+                                Text("💀 Другой пинок (\(currentIndex + 1)/\(ToxicMotivationView.quotes.count))")
                                     .font(.system(size: 14, weight: .bold))
                             }
                             .foregroundColor(.white.opacity(0.85))

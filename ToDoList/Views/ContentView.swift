@@ -20,6 +20,7 @@ public struct ContentView: View {
     @State private var isShowingExams: Bool = false
     @State private var isShowingWeeklyExport: Bool = false
     @State private var isShowingToxicPopup: Bool = false
+    @State private var isShowingAIPlanner: Bool = false
     @State private var taskToEdit: TaskItem? = nil
 
     private let calendar = Calendar.current
@@ -275,7 +276,30 @@ public struct ContentView: View {
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 14) {
+                    HStack(spacing: 12) {
+                        Button(action: {
+                            isShowingAIPlanner = true
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 13, weight: .bold))
+                                Text("AI")
+                                    .font(.system(size: 11, weight: .black))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 4)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color.blue, Color.purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .clipShape(Capsule())
+                            .shadow(color: Color.purple.opacity(0.3), radius: 4, x: 0, y: 2)
+                        }
+
                         Button(action: {
                             isShowingSearch = true
                         }) {
@@ -309,6 +333,9 @@ public struct ContentView: View {
             }
             .sheet(isPresented: $isShowingWeeklyExport) {
                 WeeklyExportView(taskManager: taskManager)
+            }
+            .sheet(isPresented: $isShowingAIPlanner) {
+                AIPlannerView(taskManager: taskManager)
             }
             .fullScreenCover(isPresented: $isShowingToxicPopup) {
                 ToxicMotivationView(

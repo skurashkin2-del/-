@@ -21,6 +21,8 @@
 		68B18549A8128FBD7F82D7B3 /* ExamsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30B7DF0FADA2B28AE70C9768 /* ExamsView.swift */; };
 		1C8825C900E4E2EAF2CFF29F /* WeeklyExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A18FB4607CF0F3F6DD93FBC2 /* WeeklyExportView.swift */; };
 		F1A0C010203040506070809A /* ToxicMotivationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A0C010203040506070809B /* ToxicMotivationView.swift */; };
+		E1A0C010203040506070809C /* GeminiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A0C010203040506070809D /* GeminiService.swift */; };
+		D1A0C010203040506070809E /* AIPlannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A0C010203040506070809F /* AIPlannerView.swift */; };
 		2EA25826B7191AC04A0C8A9F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 51E71D20947AEDCC270BC4AA /* Assets.xcassets */; };
 		59447D09FBEF5A0B5350A667 /* ToDoListWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19FF229A6863C3ABDB8FD7BD /* ToDoListWidget.swift */; };
 		355374C8FA5E28D5FB058966 /* ToDoListWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 65D903D460DFF369E2A82A95 /* ToDoListWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -67,6 +69,8 @@
 		30B7DF0FADA2B28AE70C9768 /* ExamsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExamsView.swift; sourceTree = "<group>"; };
 		A18FB4607CF0F3F6DD93FBC2 /* WeeklyExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyExportView.swift; sourceTree = "<group>"; };
 		F2A0C010203040506070809B /* ToxicMotivationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToxicMotivationView.swift; sourceTree = "<group>"; };
+		E2A0C010203040506070809D /* GeminiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiService.swift; sourceTree = "<group>"; };
+		D2A0C010203040506070809F /* AIPlannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIPlannerView.swift; sourceTree = "<group>"; };
 		B887469BF8E739D4840ED0AE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		24F4711C2845ED08212C1865 /* ToDoList.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = ToDoList.entitlements; sourceTree = "<group>"; };
 		51E71D20947AEDCC270BC4AA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -139,6 +143,7 @@
 			isa = PBXGroup;
 			children = (
 				575771B773667BD17E829D0A /* NotificationManager.swift */,
+				E2A0C010203040506070809D /* GeminiService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -163,6 +168,7 @@
 				30B7DF0FADA2B28AE70C9768 /* ExamsView.swift */,
 				A18FB4607CF0F3F6DD93FBC2 /* WeeklyExportView.swift */,
 				F2A0C010203040506070809B /* ToxicMotivationView.swift */,
+				D2A0C010203040506070809F /* AIPlannerView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -291,6 +297,8 @@
 				68B18549A8128FBD7F82D7B3 /* ExamsView.swift in Sources */,
 				1C8825C900E4E2EAF2CFF29F /* WeeklyExportView.swift in Sources */,
 				F1A0C010203040506070809A /* ToxicMotivationView.swift in Sources */,
+				E1A0C010203040506070809C /* GeminiService.swift in Sources */,
+				D1A0C010203040506070809E /* AIPlannerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
